@@ -25,11 +25,16 @@ var layer;
 
 var player;
 var facing = 'left';
-var jumpTimer = 0;
+
 var cursors;
 var jumpButton;
-var platforms;
+var jumpTimer = 0;
+
+// Flags for various actions
 var isDucking = false;
+var canJump = true;
+
+var headOverlapping = false;
 
 function create() {
 
@@ -45,7 +50,7 @@ function create() {
     
     map.addTilesetImage('tiles-1');
     
-    map.setCollisionByExclusion([ 13, 14, 15, 16, 46, 47, 48, 49, 50, 51 ]);
+    map.setCollisionByExclusion([ 13, 14, 15, 16, 17, 46, 47, 48, 49, 50, 51 ]);
     
     layer = map.createLayer('Tile Layer 1');
     
@@ -58,6 +63,7 @@ function create() {
     
     // The player and its settings
     player = game.add.sprite(32, 32, 'player');
+    
     // Enable physics on the player
     game.physics.enable(player, Phaser.Physics.ARCADE);
 
@@ -139,17 +145,26 @@ function update() {
         }
     }
     
+    // Player ducks if they press down arrow
     if (player.body.onFloor() && cursors.down.isDown) {
-        //Duck!
         isDucking = true;
+        canJump = false;
+        
+        // Make box smaller when ducking
+        setPlayerSize();
     }
     
-    if (cursors.down.isUp) {
+    // Player stands up when they press the up arrow
+    if (isDucking && cursors.up.isDown) {
         isDucking = false;
+        canJump = true;
+        
+        // Make box larger when standing
+        setPlayerSize();
     }
     
-    if (jumpButton.isDown && game.time.now > jumpTimer && (player.body.onFloor() || player.body.onWall())) {
-    //if (jumpButton.isDown && player.body.onFloor() && game.time.now > jumpTimer) {
+    // Player jumps if the jump button is pressed
+    if (canJump && jumpButton.isDown && game.time.now > jumpTimer && (player.body.onFloor() || player.body.onWall())) {
         if (player.body.touching.left || player.body.touching.right) {
             player.body.velocity.y = JUMP_HEIGHT * 0.65;
         }
@@ -179,33 +194,25 @@ function update() {
         }
     }
     
-    if (player.body.touching.left) {
-        player.animations.play('wallstick-left');
-    }
-    
-    if (player.body.touching.right) {
-        player.animations.play('wallstick-right');
-    }
-    
-    // Make smaller if ducking
-    setPlayerSize();
-    
+    // Sticking to walls animation
+    //if (player.body.onWall()) {
+    //    facing == 'left'? player.animations.play('wallstick-left') : player.animations.play('wallstick-right');
+    //}
 }
 
 function render () {
 
-    // game.debug.text(game.time.physicsElapsed, 32, 32);
-    game.debug.body(player);
-    game.debug.bodyInfo(player, 16, 24);
-    game.debug.text('isDucking:' + isDucking, 16, 128);
+    //game.debug.body(player);
+    //game.debug.bodyInfo(player, 16, 24);
+    //game.debug.text('isDucking:' + isDucking, 16, 128);
 
 }
 
 function setPlayerSize() {
     if (isDucking) {
-        player.body.setSize(36, 22, 3, 37);
+        player.body.setSize(42, 32, 0, 32);
     }
     else {
-        player.body.setSize(36, 54, 3, 5);
+        player.body.setSize(42, 64, 0, 0);
     }
 }
