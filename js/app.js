@@ -21,6 +21,7 @@ var jumpTimer = 0;
 var cursors;
 var jumpButton;
 var platforms;
+var isDucking = false;
 
 function create() {
 
@@ -99,37 +100,54 @@ function update() {
         // Move to the left
         player.body.velocity.x = -MOVE_SPEED;
         
-        player.animations.play('left');
+        if (isDucking) {
+            player.animations.play('duck-left');
+        }
+        else {
+            player.animations.play('left');
+        }
         facing = 'left';
     }
     else if (cursors.right.isDown) {
         // Move to the right
         player.body.velocity.x = MOVE_SPEED;
         
-        player.animations.play('right');
+        if (isDucking) {
+            player.animations.play('duck-right');
+        }
+        else {
+            player.animations.play('right');
+        }
         facing = 'right';
     }
     else {
         player.animations.stop();
 
         if (facing == 'left') {
-            player.frame = 0;
+            if (isDucking) {
+                player.frame = 22;
+            }
+            else {
+                player.frame = 0;
+            }
         }
         else {
-            player.frame = 8;
+            if (isDucking) {
+                player.frame = 23;
+            }
+            else {
+                player.frame = 8;
+            }
         }
     }
     
     if (player.body.touching.down && cursors.down.isDown) {
         //Duck!
-        player.body.velocity.x = 0;
-        
-        if (facing == 'left') {
-            player.animations.play('duck-left');
-        }
-        else if (facing == 'right') {
-            player.animations.play('duck-right');
-        }
+        isDucking = true;
+    }
+    
+    if (cursors.down.isUp) {
+        isDucking = false;
     }
     
     if (jumpButton.isDown && game.time.now > jumpTimer && (player.body.touching.down || player.body.touching.left || player.body.touching.right)) {
