@@ -126,7 +126,7 @@ function update() {
         }
     }
 
-    if (jumpButton.isDown && game.time.now > jumpTimer && (player.body.touching.down)) {
+    if (jumpButton.isDown && game.time.now > jumpTimer && (player.body.touching.down || player.body.touching.left || player.body.touching.right)) {
         player.body.velocity.y = JUMP_HEIGHT;
         jumpTimer = game.time.now + 400;
     }    
