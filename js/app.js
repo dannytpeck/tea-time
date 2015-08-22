@@ -1,10 +1,10 @@
 var WIDTH = 800;
 var HEIGHT = 600;
-var MOVE_SPEED = 150;
-var JUMP_SPEED = -700;
+var MOVE_SPEED = 200;
+var JUMP_HEIGHT = -700;
 var GRAVITY = 1500;
 
-var game = new Phaser.Game(WIDTH, HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var game = new Phaser.Game(WIDTH, HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
 
 function preload() {
     
@@ -20,8 +20,11 @@ var jumpTimer = 0;
 var cursors;
 var jumpButton;
 var platforms;
-var jumping;
+var onTheGround;
 var jumps;
+var jumping = false;
+var onWall = false;
+var x_pos;
     
 function create() {
 
@@ -29,35 +32,16 @@ function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     // Draw background(sky) on the screen
-    game.add.sprite(0, 0, 'sky');
+    //game.add.sprite(0, 0, 'sky');
     
-    // The platforms group contains the ground and the ledges the player can jump on
-    platforms = game.add.group();
+    game.add.tileSprite(0, 0, 1600, 600, 'sky');
+    game.world.setBounds(0, 0, 1600, 600);
     
-    // Enable physics for any object that is created in this group
-    platforms.enableBody = true;
-    
-    // Create the ground
-    var ground = platforms.create(0, game.world.height - 32, 'platform');
-    
-    // Scale it to fit the width of the game (the original sprite is 400x32)
-    ground.scale.setTo(2, 1); //width multiplier, height multiplier
-    
-    // This stops the ground from falling away when its jumped on
-    ground.body.immovable = true;
-
-    // Create two ledges
-    var ledge = platforms.create(400, 400, 'platform');
-    ledge.body.immovable = true;
-    ledge = platforms.create(-150, 250, 'platform');
-    ledge.body.immovable = true;
-
     // The player and its settings
     player = game.add.sprite(32, game.world.height - 100, 'player');
     
     // Enable physics on the player
-    //game.physics.arcade.enable(player);
-    game.physics.enable(player, Phaser.Physics.ARCADE);
+    game.physics.arcade.enable(player);
 
     // Player physics properties. (Give a little bounce)
     player.body.bounce.y = 0.2;
@@ -68,14 +52,34 @@ function create() {
     // Our two animations, walking left and right.
     player.animations.add('left', [0, 1, 2, 3, 4, 5, 6, 7], 10, true);
     player.animations.add('right', [8, 9, 10, 11, 12, 13, 14, 15], 10, true);
+
+    // The platforms group contains the ground and the ledges the player can jump on
+    platforms = game.add.group();
+    
+    // Enable physics for any object that is created in this group
+    platforms.enableBody = true;
+    
+    // Create the ground
+    var ground = platforms.create(0, game.world.height - 32, 'platform');
+    
+    // Scale it to fit the width of the game (the original sprite is 400x32)
+    ground.scale.setTo(4, 1); //width multiplier, height multiplier
+    
+    // This stops the ground from falling away when its jumped on
+    ground.body.immovable = true;
+
+    // Create two ledges
+    var ledge = platforms.create(400, 400, 'platform');
+    ledge.body.immovable = true;
+    ledge = platforms.create(-150, 250, 'platform');
+    ledge.body.immovable = true;
     
     // Our controls
     cursors = game.input.keyboard.createCursorKeys();
     jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-    
-    // Flag to track if the jump button is pressed
-    jumping = false;
-    
+
+    // Make camera follow player
+    game.camera.follow(player, Phaser.Camera.FOLLOW_PLATFORMER);
 }
 
 function update() {
@@ -121,54 +125,18 @@ function update() {
             facing = 'idle';
         }
     }
-    
-    // Allow the player to jump if they are touching the ground
-    //if (jumpButton.isDown && player.body.touching.down && game.time.now > jumpTimer) {
-    //    player.body.velocity.y = JUMP_HEIGHT;
-    //    jumpTimer = game.time.now + 750;
-   // }
-    
-    // Set a variable that is true when the player is touching the ground
-    var onTheGround = player.body.touching.down;
-    
-    // If the player is touching the ground, let him have 2 jumps
-    if (onTheGround) {
-        jumps = 2;
-        jumping = false;
-    }
-    
-    // Jump!
-    if (jumps > 0 && jumpButtonIsActive(5)) {
-        player.body.velocity.y = JUMP_SPEED;
-        jumping = true;
-    }
-    
-    console.log(jumping);
-    
-    // Reduce the number of available jumps if the jump input is released
-    if (jumping && jumpButtonReleased) {
-        jumps--;
-        jumping = false;
+
+    if (jumpButton.isDown && game.time.now > jumpTimer && (player.body.touching.down)) {
+        player.body.velocity.y = JUMP_HEIGHT;
+        jumpTimer = game.time.now + 400;
     }    
     
 }
 
-// This function should return true when the player activates the "jump" control
-// In this case, either holding the up arrow or tapping or clicking on the center
-// part of the screen.
-var jumpButtonIsActive = function(duration) {
-    var isActive = false;
+function render () {
 
-    isActive = game.input.keyboard.downDuration(Phaser.Keyboard.SPACEBAR, duration);
+    // game.debug.text(game.time.physicsElapsed, 32, 32);
+    // game.debug.body(player);
+    game.debug.bodyInfo(player, 16, 24);
 
-    return isActive;
-};
-
-// This function returns true when the player releases the "jump" control
-var jumpButtonReleased = function() {
-    var released = false;
-
-    released = game.input.keyboard.upDuration(Phaser.Keyboard.SPACEBAR);
-
-    return released;
-};
+}
