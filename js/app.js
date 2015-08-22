@@ -13,9 +13,8 @@ function preload() {
     
     game.load.spritesheet('player', 'assets/slimegirl.png', 42, 64);    
     
-    game.load.image('background', 'assets/sky.png');
-    game.load.image('platform', 'assets/platform.png');
-    game.load.image('wall', 'assets/wall.png');
+    game.load.image('background', 'assets/beginningcavebg.png');
+    game.load.image('menu', 'assets/menu window.png');
 
 }
 
@@ -34,7 +33,9 @@ var jumpTimer = 0;
 var isDucking = false;
 var canJump = true;
 
-var headOverlapping = false;
+var menuButton;
+var popup;
+var tween = null;
 
 function create() {
 
@@ -55,7 +56,7 @@ function create() {
     layer = map.createLayer('Tile Layer 1');
     
     // Uncomment to see collision tiles
-    layer.debug = true;
+    // layer.debug = true;
     
     layer.resizeWorld();
     
@@ -87,9 +88,26 @@ function create() {
     // Our controls
     cursors = game.input.keyboard.createCursorKeys();
     jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    menuButton = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
 
     // Make camera follow player
     game.camera.follow(player, Phaser.Camera.FOLLOW_PLATFORMER);
+    
+    /* Pop up window code */
+    
+    //  You can drag the pop-up window around
+    popup = game.add.sprite(game.world.x, game.world.y, 'menu');
+    popup.fixedToCamera = true;
+    
+    popup.alpha = 0.8;
+    popup.scale.set(0.1); 
+    //popup.anchor.set(0.5);
+    //popup.inputEnabled = true;
+    //popup.input.enableDrag();
+
+    // Hide it until button is clicked
+    popup.visible = false;
+
 }
 
 function update() {
@@ -154,8 +172,8 @@ function update() {
         setPlayerSize();
     }
     
-    // Player stands up when they press the up arrow
-    if (isDucking && cursors.up.isDown) {
+    // Player stands when down arrow is released
+    if (isDucking && cursors.down.isUp) {
         isDucking = false;
         canJump = true;
         
@@ -198,6 +216,15 @@ function update() {
     //if (player.body.onWall()) {
     //    facing == 'left'? player.animations.play('wallstick-left') : player.animations.play('wallstick-right');
     //}
+    
+    if (menuButton.isDown) {
+        if (popup.visible) {
+            closeWindow();
+        }
+        else {
+            openWindow();
+        }
+    }
 }
 
 function render () {
@@ -205,6 +232,8 @@ function render () {
     //game.debug.body(player);
     //game.debug.bodyInfo(player, 16, 24);
     //game.debug.text('isDucking:' + isDucking, 16, 128);
+    // Camera
+    game.debug.cameraInfo(game.camera, 32, 32);
 
 }
 
@@ -215,4 +244,30 @@ function setPlayerSize() {
     else {
         player.body.setSize(42, 64, 0, 0);
     }
+}
+
+function openWindow() {
+
+    if (tween !== null && tween.isRunning)
+    {
+        return;
+    }
+    
+    //  Create a tween that will pop-open the window, but only if it's not already tweening or open
+    tween = game.add.tween(popup.scale).to( { x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out, true);
+    popup.visible = true;
+
+}
+
+function closeWindow() {
+
+    if (tween && tween.isRunning)
+    {
+        return;
+    }
+
+    //  Create a tween that will close the window, but only if it's not already tweening or closed
+    tween = game.add.tween(popup.scale).to( { x: 0.1, y: 0.1 }, 500, Phaser.Easing.Elastic.In, true);
+    popup.visible = false;
+
 }
