@@ -30,6 +30,7 @@ BasicGame.Cave = function (game) {
 
 BasicGame.Cave.prototype = {
 
+/*
 	preload: function () {
 
 		// Here we load the assets our game needs.
@@ -53,7 +54,7 @@ BasicGame.Cave.prototype = {
         this.load.image('caveexit', 'assets/tutorial-cave-exit.png');
 
 	},
-	
+*/	
     create: function () {
 
         // Enable P2
@@ -69,11 +70,6 @@ BasicGame.Cave.prototype = {
         this.physics.p2.gravity.y = GRAVITY; 
 
         this.bg = this.add.tileSprite(0, 0, 3200, 2400, 'tutorialcave');
-
-        // Add exit and enable physics so it can be "touched"
-        this.exit = this.add.sprite(500, this.game.world.height - 300, 'caveexit');
-        this.physics.p2.enable(this.exit);
-        
 
         // now lets initialise the tilemap .. first we create a new tilemap and for further references we put it on "mymap"    (testmap is the cachekey given in the preload function - the cachekey was your own choice)
         this.mymap = this.add.tilemap('testmap');
@@ -109,7 +105,9 @@ BasicGame.Cave.prototype = {
         this.layerobjects_tiles = this.physics.p2.convertCollisionObjects(this.mymap,"objects1");
         
         //this adds our player to the scene  (xposition, yposition, cachekey)
-        this.player = this.game.add.sprite(200, this.game.world.height - 300, 'player');
+        //this.player = this.game.add.sprite(200, this.game.world.height - 300, 'player');
+        this.player = this.game.add.sprite(200, this.game.world.height - 300, 'slimegirl', 'walk001');
+        
         this.player.scale.set(0.5);
         //player.scale.x = 0.5;
         //player.scale.y = 0.5;
@@ -127,7 +125,13 @@ BasicGame.Cave.prototype = {
         this.player.body.setCircle(100,0,0);
     
         // this adds our animations for later use (custom cachekey, frames used for the animation, frames played per second, loop )
-        this.player.animations.add('walk', [0, 1, 2, 1, 0, 3, 4, 3], 10, true);
+        // this.player.animations.add('walk', [0, 1, 2, 1, 0, 3, 4, 3], 10, true);
+        
+        // Use an atlas instead (generateFrameNames('animation name', firstIndex, lastIndex, suffixString, zeroPadding)
+        //this.player.animations.add('walk', Phaser.Animation.generateFrameNames('walk', 1, 5, '', 3), 10, true, false);
+        // 1-2-3-2-1-4-5-4
+        this.player.animations.add('walk', ['walk001', 'walk002'], 10, true, false);
+        
         //player.animations.add('jump-left', [16], 10, true);
         //player.animations.add('jump-right', [17], 10, true);
         //player.animations.add('fall-left', [18], 10, true);
@@ -160,7 +164,7 @@ BasicGame.Cave.prototype = {
         this.player.body.onBeginContact.add(this.blockHit, this);
 
         // Add exit and enable physics so it can be "touched"
-        this.exit = this.add.sprite(500, this.game.world.height - 300, 'caveexit');
+        this.exit = this.add.sprite(32, 256, 'caveexit');
         this.physics.p2.enable(this.exit);
         this.exit.body.static = true;
 

@@ -24,11 +24,45 @@ BasicGame.Preloader.prototype = {
 
 		//	Here we load the rest of the assets our game needs.
 		//	As this is just a Project Template I've not provided these assets, swap them for your own.
-		this.load.image('titlepage', 'images/title.jpg');
-		this.load.atlas('playButton', 'images/play_button.png', 'images/play_button.json');
+		//this.load.image('titlepage', 'images/title.jpg');
+		//this.load.atlas('playButton', 'images/play_button.png', 'images/play_button.json');
 		this.load.audio('titleMusic', ['audio/main_menu.mp3']);
-		this.load.bitmapFont('caslon', 'fonts/caslon.png', 'fonts/caslon.xml');
-		//	+ lots of other required assets here
+		//this.load.bitmapFont('caslon', 'fonts/caslon.png', 'fonts/caslon.xml');
+
+
+		// Here we load the assets our game needs.
+
+        // Load the json tilemaps created with tiled (cachekey, filename, type of tilemap parser)
+        this.load.tilemap('testmap', 'assets/test-tilemap-polygon.json', null, Phaser.Tilemap.TILED_JSON);
+        this.load.tilemap('forest', 'assets/forest.json', null, Phaser.Tilemap.TILED_JSON);  
+
+        // Load the tileset images used in tiled to create the map  (cachekey, filename)
+        this.load.image('test-tileset', 'assets/test-tileset.png');
+
+        // Load the player's spritesheet
+        // this.load.spritesheet('player', 'assets/slimegirl.png', 400, 400);
+
+        this.load.image('menu', 'assets/menu window.png');
+        
+        // Load the background images
+        this.load.image('tutorialcave', 'assets/Tutorial Cave.png');
+        this.load.image('forestbg', 'assets/The Forest.png');
+        
+        this.load.image('caveexit', 'assets/tutorial-cave-exit.png');
+        
+        
+		//  Phaser can load Texture Atlas files that use either JSON Hash or JSON Array format.
+	
+	    //  As with all load operations the first parameter is a unique key, which must be unique between all image files.
+	
+	    //  Next is the texture atlas itself, in this case seacreatures.png
+	
+	    //  Finally is the path to the JSON file that goes with the atlas.
+	    // game.load.atlas('seacreatures', 'assets/sprites/seacreatures_json.png', 'assets/sprites/seacreatures_json.json');
+	
+	    //  Note that the JSON file should be saved with UTF-8 encoding or some browsers (such as Firefox) won't load it.
+	
+	    this.load.atlas('slimegirl', 'assets/sprites/slimegirl_animations.png', 'assets/sprites/slimegirl_animations.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);        
 
 	},
 
@@ -53,7 +87,8 @@ BasicGame.Preloader.prototype = {
 		if (this.cache.isSoundDecoded('titleMusic') && this.ready == false)
 		{
 			this.ready = true;
-			this.state.start('MainMenu');
+			//this.state.start('MainMenu');
+			this.state.start('Cave');
 		}
 
 	}
