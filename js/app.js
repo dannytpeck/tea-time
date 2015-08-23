@@ -10,27 +10,24 @@ function preload() {
 
     // this loads an image (in that case an image that is usable as tilingimage in x and y directions)
     game.load.image('stars', 'assets/stars-tilingsprite.png');
-    
-    // another image that can be used as tiling image
-    game.load.image('hills', 'assets/hills-tilingsprite.png');
-    
+
     // another image that can be used as tiling image in the x direction
     game.load.image('hills', 'assets/hills-tilingsprite.png');
     
     // this loads the json tilemap created with tiled (cachekey, filename, type of tilemap parser)
     game.load.tilemap('testmap', 'assets/test-tilemap-polygon.json', null, Phaser.Tilemap.TILED_JSON);  
+    //game.load.tilemap('testmap', 'assets/tutorialcave.json', null, Phaser.Tilemap.TILED_JSON);  
     
     // this loads a very important image - it is the tileset image used in tiled to create the map  (cachekey, filename)
     game.load.image('test-tileset', 'assets/test-tileset.png');
+    //game.load.image('test-tileset', 'assets/tutorialcave.png');
 
-    //////////////////////////////////////////////////
-    //game.load.tilemap('level1', 'assets/level1.json', null, Phaser.Tilemap.TILED_JSON);
-    //game.load.image('tiles-1', 'assets/tiles-1.png');
+    //game.load.spritesheet('player', 'assets/slimegirl.png', 42, 64);
+    game.load.spritesheet('player', 'assets/maincharacter.png', 200, 200);
     
-    game.load.spritesheet('player', 'assets/slimegirl.png', 42, 64);    
-    
-    //game.load.image('background', 'assets/beginningcavebg.png');
     game.load.image('menu', 'assets/menu window.png');
+    
+    game.load.image('tutorialcave', 'assets/Tutorial Cave.png');
 
 }
 
@@ -65,8 +62,9 @@ function create() {
     game.physics.p2.gravity.y = GRAVITY; 
     
     // this adds a tiling sprite that covers the whole canvas - the size of the canvas (800x640) is set below when you create a new phaser game
-    stars = game.add.tileSprite(0,0,800,640,'stars');
-    stars.fixedToCamera = true;
+    //stars = game.add.tileSprite(0,0,800,640,'stars');
+    stars = game.add.tileSprite(0, 0, 3200, 2400, 'tutorialcave');
+    //stars.fixedToCamera = true;
     
     // these hills are spanned over the whole map  - the map is 40x20 tiles at 32x32 pixels so the whole map is 1280x640 pixels in size
     hills = game.add.tileSprite(0,0,1280,640,'hills');
@@ -108,7 +106,8 @@ function create() {
     player = game.add.sprite(150, 250, 'player');
     
     // enable physics for the player (p2)
-    game.physics.p2.enable(player); 
+    game.physics.p2.enable(player);
+    player.body.bounce = 1;
 
     //use this if you want to see the shapes. This enables debugging for the body.
     //Remove in production!
@@ -123,20 +122,19 @@ function create() {
     // camera will always center on the player
     game.camera.follow(player); 
     
-    // instead of a rectangle i want a circle (radius, offsetX, offsetY)
-    player.body.setCircle(28,0,0);
+    // instead of a rectangle I want a circle (radius, offsetX, offsetY)
+    player.body.setCircle(100,0,0);
 
     // this adds our animations for later use (custom cachekey, frames used for the animation, frames played per second, loop )
-    player.animations.add('left', [0, 1, 2, 3, 4, 5, 6, 7], 10, true);
-    player.animations.add('walk', [8, 9, 10, 11, 12, 13, 14, 15], 10, true);
-    player.animations.add('jump-left', [16], 10, true);
-    player.animations.add('jump-right', [17], 10, true);
-    player.animations.add('fall-left', [18], 10, true);
-    player.animations.add('fall-right', [19], 10, true);
-    player.animations.add('wallstick-left', [20], 10, true);
-    player.animations.add('wallstick-right', [21], 10, true);
-    player.animations.add('duck-left', [22], 10, true);
-    player.animations.add('duck-right', [23], 10, true);
+    player.animations.add('walk', [0], 10, true);
+    //player.animations.add('jump-left', [16], 10, true);
+    //player.animations.add('jump-right', [17], 10, true);
+    //player.animations.add('fall-left', [18], 10, true);
+    //player.animations.add('fall-right', [19], 10, true);
+    //player.animations.add('wallstick-left', [20], 10, true);
+    //player.animations.add('wallstick-right', [21], 10, true);
+    //player.animations.add('duck-left', [22], 10, true);
+    //player.animations.add('duck-right', [23], 10, true);
 
     // we need some cursor keys for our controls
     cursors = game.input.keyboard.createCursorKeys();
@@ -176,7 +174,7 @@ function update() {
         player.body.velocity.x = -MOVE_SPEED;
         
         if (isDucking) {
-            player.animations.play('duck-right');
+            player.animations.play('walk');
         }
         else {
             player.animations.play('walk');
@@ -188,7 +186,7 @@ function update() {
         player.body.velocity.x = MOVE_SPEED;
         
         if (isDucking) {
-            player.animations.play('duck-right');
+            player.animations.play('walk');
         }
         else {
             player.animations.play('walk');
@@ -201,7 +199,7 @@ function update() {
 
         if (facing == 'left') {
             if (isDucking) {
-                player.frame = 22;
+                player.frame = 0;
             }
             else {
                 player.frame = 0;
@@ -209,10 +207,10 @@ function update() {
         }
         else {
             if (isDucking) {
-                player.frame = 23;
+                player.frame = 0;
             }
             else {
-                player.frame = 8;
+                player.frame = 0;
             }
         }
     }
@@ -250,21 +248,21 @@ function update() {
     if (player.body.velocity.y < -50) {
         player.scale.x = 1;
         if (facing == 'left') {
-            player.animations.play('jump-left');
+            player.animations.play('walk');
         }
         else if (facing == 'right') {
-            player.animations.play('jump-right');
+            player.animations.play('walk');
         }
     }
 
     // Falling animation    
-    if (player.body.velocity.y > 0) {
+    if (player.body.velocity.y > 100) {
         player.scale.x = 1;
         if (facing == 'left') {
-            player.animations.play('fall-left');
+            player.animations.play('walk');
         }
         else if (facing == 'right') {
-            player.animations.play('fall-right');
+            player.animations.play('walk');
         }
     }
     
@@ -303,7 +301,7 @@ function render () {
 
     //game.debug.body(player);
     //game.debug.bodyInfo(player, 16, 24);
-    //game.debug.text('isDucking:' + isDucking, 16, 128);
+    game.debug.text('isDucking:' + isDucking + 'Velocity Y:' + player.body.velocity.y, 16, 128);
     // Camera
     //game.debug.cameraInfo(game.camera, 32, 32);
 
@@ -311,10 +309,10 @@ function render () {
 
 function setPlayerSize() {
     if (isDucking) {
-        player.body.setCircle(20, 0, 9);
+        player.body.setCircle(50, 0, 0);
     }
     else {
-        player.body.setCircle(28, 0, 0);
+        player.body.setCircle(100, 0, 0);
     }
 }
 
