@@ -124,7 +124,7 @@ function create() {
     game.camera.follow(player); 
     
     // instead of a rectangle i want a circle (radius, offsetX, offsetY)
-    player.body.setCircle(22,0,0);
+    player.body.setCircle(28,0,0);
 
     // this adds our animations for later use (custom cachekey, frames used for the animation, frames played per second, loop )
     player.animations.add('left', [0, 1, 2, 3, 4, 5, 6, 7], 10, true);
@@ -248,6 +248,7 @@ function update() {
 
     // Jumping animation
     if (player.body.velocity.y < -50) {
+        player.scale.x = 1;
         if (facing == 'left') {
             player.animations.play('jump-left');
         }
@@ -258,6 +259,7 @@ function update() {
 
     // Falling animation    
     if (player.body.velocity.y > 0) {
+        player.scale.x = 1;
         if (facing == 'left') {
             player.animations.play('fall-left');
         }
@@ -309,10 +311,10 @@ function render () {
 
 function setPlayerSize() {
     if (isDucking) {
-        player.body.setSize(42, 32, 0, 32);
+        player.body.setCircle(20, 0, 9);
     }
     else {
-        player.body.setSize(42, 64, 0, 0);
+        player.body.setCircle(28, 0, 0);
     }
 }
 
