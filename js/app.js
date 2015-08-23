@@ -1,18 +1,18 @@
 var WIDTH = 800;
 var HEIGHT = 600;
-var MOVE_SPEED = 200;
+var MOVE_SPEED = 400;
 var JUMP_HEIGHT = -700;
-var GRAVITY = 1400;
+var GRAVITY = 500; //1400
 
 var game = new Phaser.Game(WIDTH, HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
 
 function preload() {
 
     // this loads an image (in that case an image that is usable as tilingimage in x and y directions)
-    game.load.image('stars', 'assets/stars-tilingsprite.png');
+    //game.load.image('stars', 'assets/stars-tilingsprite.png');
 
     // another image that can be used as tiling image in the x direction
-    game.load.image('hills', 'assets/hills-tilingsprite.png');
+    //game.load.image('hills', 'assets/hills-tilingsprite.png');
     
     // this loads the json tilemap created with tiled (cachekey, filename, type of tilemap parser)
     game.load.tilemap('testmap', 'assets/test-tilemap-polygon.json', null, Phaser.Tilemap.TILED_JSON);  
@@ -22,8 +22,8 @@ function preload() {
     game.load.image('test-tileset', 'assets/test-tileset.png');
     //game.load.image('test-tileset', 'assets/tutorialcave.png');
 
-    //game.load.spritesheet('player', 'assets/slimegirl.png', 42, 64);
-    game.load.spritesheet('player', 'assets/maincharacter.png', 200, 200);
+    game.load.spritesheet('player', 'assets/slimegirl.png', 400, 400);
+    //game.load.spritesheet('player', 'assets/maincharacter.png', 200, 200);
     
     game.load.image('menu', 'assets/menu window.png');
     
@@ -31,12 +31,8 @@ function preload() {
 
 }
 
-var bg;
-var map;
-var layer;
-
 var player;
-var facing = 'left';
+var facing = 'right';
 
 var cursors;
 var jumpButton;
@@ -47,11 +43,11 @@ var isDucking = false;
 var canJump = true;
 
 var menuButton;
-var popup;
+var menuWindow;
 var tween = null;
 
-var stars;
 var hills;
+var stars;
 
 function create() {
 
@@ -67,7 +63,7 @@ function create() {
     //stars.fixedToCamera = true;
     
     // these hills are spanned over the whole map  - the map is 40x20 tiles at 32x32 pixels so the whole map is 1280x640 pixels in size
-    hills = game.add.tileSprite(0,0,1280,640,'hills');
+    // hills = game.add.tileSprite(0,0,1280,640,'hills');
     
     // now lets initialise the tilemap .. first we create a new tilemap and for further references we put it on "mymap"    (testmap is the cachekey given in the preload function - the cachekey was your own choice)
     mymap = game.add.tilemap('testmap');
@@ -103,16 +99,13 @@ function create() {
     layerobjects_tiles = game.physics.p2.convertCollisionObjects(mymap,"objects1");
     
     //this adds our player to the scene  (xposition, yposition, cachekey)
-    player = game.add.sprite(150, 250, 'player');
+    player = game.add.sprite(200, game.world.height - 300, 'player');
+    player.scale.x = 0.5;
+    player.scale.y = 0.5;
     
     // enable physics for the player (p2)
     game.physics.p2.enable(player);
-    player.body.bounce = 1;
 
-    //use this if you want to see the shapes. This enables debugging for the body.
-    //Remove in production!
-    game.physics.p2.enable(player, true);
-    
     // set the anchor to the exact middle of the player (good for flipping the image on the same place)
     player.anchor.setTo(0.5,0.5);
     
@@ -126,7 +119,7 @@ function create() {
     player.body.setCircle(100,0,0);
 
     // this adds our animations for later use (custom cachekey, frames used for the animation, frames played per second, loop )
-    player.animations.add('walk', [0], 10, true);
+    player.animations.add('walk', [0, 1, 2, 1, 0, 3, 4, 3], 10, true);
     //player.animations.add('jump-left', [16], 10, true);
     //player.animations.add('jump-right', [17], 10, true);
     //player.animations.add('fall-left', [18], 10, true);
@@ -144,33 +137,29 @@ function create() {
     // Make camera follow player
     game.camera.follow(player, Phaser.Camera.FOLLOW_PLATFORMER);
     
-    /* Pop up window code */
+    // Menu Code
+    menuWindow = game.add.sprite(game.world.x + 200, game.world.y + 100, 'menu');
+    menuWindow.fixedToCamera = true;
     
-    //  You can drag the pop-up window around
-    popup = game.add.sprite(game.world.x, game.world.y, 'menu');
-    popup.fixedToCamera = true;
-    
-    popup.alpha = 0.8;
-    popup.scale.set(0.1); 
-    //popup.anchor.set(0.5);
-    //popup.inputEnabled = true;
-    //popup.input.enableDrag();
+    menuWindow.alpha = 0.8;
+    menuWindow.anchor.set(0.5);
 
     // Hide it until button is clicked
-    popup.visible = false;
+    menuWindow.visible = false;
+    menuWindow.scale.set(0.1); 
 
 }
 
 function update() {
     
     // this moves the background "hills" relative to the camera (with 20% of it's speed) and creates the well known parallax effect
-    hills.x = game.camera.x * 0.2;
+    // hills.x = game.camera.x * 0.2;
     
     // Resets player velocity every update
     player.body.velocity.x = 0;
 
     if (cursors.left.isDown) {
-        player.scale.x = -1;  // a little trick... flips the image to the left
+        player.scale.x = -0.5;
         player.body.velocity.x = -MOVE_SPEED;
         
         if (isDucking) {
@@ -182,7 +171,7 @@ function update() {
         facing = 'left';
     }
     else if (cursors.right.isDown) {
-        player.scale.x = 1;
+        player.scale.x = 0.5;
         player.body.velocity.x = MOVE_SPEED;
         
         if (isDucking) {
@@ -195,7 +184,6 @@ function update() {
     }
     else {
         player.animations.stop();
-        player.scale.x = 1;
 
         if (facing == 'left') {
             if (isDucking) {
@@ -246,7 +234,6 @@ function update() {
 
     // Jumping animation
     if (player.body.velocity.y < -50) {
-        player.scale.x = 1;
         if (facing == 'left') {
             player.animations.play('walk');
         }
@@ -257,7 +244,6 @@ function update() {
 
     // Falling animation    
     if (player.body.velocity.y > 100) {
-        player.scale.x = 1;
         if (facing == 'left') {
             player.animations.play('walk');
         }
@@ -266,13 +252,15 @@ function update() {
         }
     }
     
-    // Sticking to walls animation
-    //if (player.body.onWall()) {
-    //    facing == 'left'? player.animations.play('wallstick-left') : player.animations.play('wallstick-right');
-    //}
+    if (facing == 'left' && player.scale.x === 1) {
+        player.scale.x = -1;
+    }
+    else if (facing == 'right' && player.scale.x === -1) {
+        player.scale.x = 1;
+    }
     
     if (menuButton.isDown) {
-        if (popup.visible) {
+        if (menuWindow.visible) {
             closeWindow();
         }
         else {
@@ -299,17 +287,16 @@ function touchingDown(someone) {
 
 function render () {
 
-    //game.debug.body(player);
+    game.debug.body(player);
     //game.debug.bodyInfo(player, 16, 24);
-    game.debug.text('isDucking:' + isDucking + 'Velocity Y:' + player.body.velocity.y, 16, 128);
-    // Camera
+    //game.debug.text('isDucking:' + isDucking + ' Velocity Y:' + player.body.velocity.y, 16, 24);
     //game.debug.cameraInfo(game.camera, 32, 32);
 
 }
 
 function setPlayerSize() {
     if (isDucking) {
-        player.body.setCircle(50, 0, 0);
+        player.body.setCircle(50, 0, 50);
     }
     else {
         player.body.setCircle(100, 0, 0);
@@ -324,8 +311,8 @@ function openWindow() {
     }
     
     //  Create a tween that will pop-open the window, but only if it's not already tweening or open
-    tween = game.add.tween(popup.scale).to( { x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out, true);
-    popup.visible = true;
+    tween = game.add.tween(menuWindow.scale).to( { x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out, true);
+    menuWindow.visible = true;
 
 }
 
@@ -337,7 +324,7 @@ function closeWindow() {
     }
 
     //  Create a tween that will close the window, but only if it's not already tweening or closed
-    tween = game.add.tween(popup.scale).to( { x: 0.1, y: 0.1 }, 500, Phaser.Easing.Elastic.In, true);
-    popup.visible = false;
+    tween = game.add.tween(menuWindow.scale).to( { x: 0.1, y: 0.1 }, 500, Phaser.Easing.Elastic.In, true);
+    menuWindow.visible = false;
 
 }
