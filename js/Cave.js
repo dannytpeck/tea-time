@@ -130,7 +130,9 @@ BasicGame.Cave.prototype = {
         // Use an atlas instead (generateFrameNames('animation name', firstIndex, lastIndex, suffixString, zeroPadding)
         //this.player.animations.add('walk', Phaser.Animation.generateFrameNames('walk', 1, 5, '', 3), 10, true, false);
         // 1-2-3-2-1-4-5-4
-        this.player.animations.add('walk', ['walk001', 'walk002'], 10, true, false);
+        this.player.animations.add('walk', ['walk001', 'walk002', 'walk003', 'walk002', 'walk001', 'walk004', 'walk005', 'walk004'], 10, true, false);
+        // 1-2-3-2-1-4-5-6
+        this.player.animations.add('idle', ['idle001', 'idle002', 'idle003', 'idle002', 'idle001', 'idle004', 'idle005', 'idle006'], 8, true, false);
         
         //player.animations.add('jump-left', [16], 10, true);
         //player.animations.add('jump-right', [17], 10, true);
@@ -174,7 +176,7 @@ BasicGame.Cave.prototype = {
 
         // Resets player velocity every update
         this.player.body.velocity.x = 0;
-    
+
         if (this.cursors.left.isDown) {
             this.player.scale.x = -0.5;
             this.player.body.velocity.x = -MOVE_SPEED;
@@ -200,23 +202,14 @@ BasicGame.Cave.prototype = {
             this.facing = 'right';
         }
         else {
-            this.player.animations.stop();
+            //this.player.animations.stop();
     
-            if (this.facing == 'left') {
-                if (this.isDucking) {
-                    this.player.frame = 0;
-                }
-                else {
-                    this.player.frame = 0;
-                }
+            if (this.isDucking) {
+                this.player.frame = 0;
             }
             else {
-                if (this.isDucking) {
-                    this.player.frame = 0;
-                }
-                else {
-                    this.player.frame = 0;
-                }
+                // Play idle animation if not moving
+                this.player.animations.play('idle');
             }
         }
         
@@ -254,7 +247,7 @@ BasicGame.Cave.prototype = {
             }
         }
     
-        // Falling animation    
+        /* Falling animation    
         if (this.player.body.velocity.y > 100) {
             if (this.facing == 'left') {
                 this.player.animations.play('walk');
@@ -262,13 +255,13 @@ BasicGame.Cave.prototype = {
             else if (this.facing == 'right') {
                 this.player.animations.play('walk');
             }
-        }
+        } */
         
-        if (this.facing == 'left' && this.player.scale.x === 1) {
-            this.player.scale.x = -1;
+        if (this.facing == 'left' && this.player.scale.x > 0) {
+            this.player.scale.x *= -1;
         }
-        else if (this.facing == 'right' && this.player.scale.x === -1) {
-            this.player.scale.x = 1;
+        else if (this.facing == 'right' && this.player.scale.x < 0) {
+            this.player.scale.x *= 1;
         }
         
         if (this.menuButton.isDown) {
@@ -277,16 +270,6 @@ BasicGame.Cave.prototype = {
             }
             else {
                 this.openWindow();
-                //delete this later, testing out possible ways to destroy everything and rebuild
-                this.world.removeAll();
-                this.player = this.add.sprite(200, this.world.height - 300, 'player');
-                this.player.scale.set(0.5);
-                this.player.anchor.setTo(0.5,0.5);
-                
-                this.physics.p2.enable(this.player);
-                this.player.body.fixedRotation = true;
-                this.player.body.setCircle(100,0,0);
-                this.player.animations.add('walk', [0, 1, 2, 1, 0, 3, 4, 3], 10, true);
             }
         }
 
