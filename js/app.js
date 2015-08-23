@@ -8,14 +8,12 @@ var game = new Phaser.Game(WIDTH, HEIGHT, Phaser.AUTO, '', { preload: preload, c
 
 function preload() {
 
-    // this loads an image (in that case an image that is usable as tilingimage in x and y directions)
-    //game.load.image('stars', 'assets/stars-tilingsprite.png');
-
     // another image that can be used as tiling image in the x direction
     //game.load.image('hills', 'assets/hills-tilingsprite.png');
     
     // this loads the json tilemap created with tiled (cachekey, filename, type of tilemap parser)
-    game.load.tilemap('testmap', 'assets/test-tilemap-polygon.json', null, Phaser.Tilemap.TILED_JSON);  
+    game.load.tilemap('testmap', 'assets/test-tilemap-polygon.json', null, Phaser.Tilemap.TILED_JSON);
+    game.load.tilemap('forest', 'assets/forest.json', null, Phaser.Tilemap.TILED_JSON);  
     //game.load.tilemap('testmap', 'assets/tutorialcave.json', null, Phaser.Tilemap.TILED_JSON);  
     
     // this loads a very important image - it is the tileset image used in tiled to create the map  (cachekey, filename)
@@ -28,6 +26,9 @@ function preload() {
     game.load.image('menu', 'assets/menu window.png');
     
     game.load.image('tutorialcave', 'assets/Tutorial Cave.png');
+    game.load.image('caveexit', 'assets/tutorial-cave-exit.png');
+    
+    game.load.image('forestbg', 'assets/The Forest.png');
 
 }
 
@@ -47,24 +48,30 @@ var menuWindow;
 var tween = null;
 
 var hills;
-var stars;
+var bg;
+var exit;
+var result = 'Nothing to report!';
+
+var layerobjects_tiles;
 
 function create() {
 
-    //this will start the powerful p2 physics system
+    // Enable P2
     game.physics.startSystem(Phaser.Physics.P2JS);
+
+    // Turn on impact events for the world, without this we get no collision callbacks
+    game.physics.p2.setImpactEvents(true);
     
+    // Makes objects bounce off each other
+    // game.physics.p2.restitution = 0.8;
+
     // this creates an almost realistic gravity
     game.physics.p2.gravity.y = GRAVITY; 
     
-    // this adds a tiling sprite that covers the whole canvas - the size of the canvas (800x640) is set below when you create a new phaser game
-    //stars = game.add.tileSprite(0,0,800,640,'stars');
-    stars = game.add.tileSprite(0, 0, 3200, 2400, 'tutorialcave');
-    //stars.fixedToCamera = true;
-    
-    // these hills are spanned over the whole map  - the map is 40x20 tiles at 32x32 pixels so the whole map is 1280x640 pixels in size
-    // hills = game.add.tileSprite(0,0,1280,640,'hills');
-    
+    bg = game.add.tileSprite(0, 0, 3200, 2400, 'tutorialcave');
+    exit = game.add.sprite(0, 300, 'caveexit');
+    game.physics.p2.enable(exit);
+
     // now lets initialise the tilemap .. first we create a new tilemap and for further references we put it on "mymap"    (testmap is the cachekey given in the preload function - the cachekey was your own choice)
     mymap = game.add.tilemap('testmap');
     //now we add a tilsetimage to the created map-object residing on "mymap" - the name of the tilesetimage is stored in the json file and needs to be the exact same name.. you already chose the right name in your preload function - now use this cachekey 
@@ -100,8 +107,9 @@ function create() {
     
     //this adds our player to the scene  (xposition, yposition, cachekey)
     player = game.add.sprite(200, game.world.height - 300, 'player');
-    player.scale.x = 0.5;
-    player.scale.y = 0.5;
+    player.scale.set(0.5);
+    //player.scale.x = 0.5;
+    //player.scale.y = 0.5;
     
     // enable physics for the player (p2)
     game.physics.p2.enable(player);
@@ -111,9 +119,6 @@ function create() {
     
     // in p2 rotation is possible.. i don't want this on my player 
     player.body.fixedRotation = true;
-    
-    // camera will always center on the player
-    game.camera.follow(player); 
     
     // instead of a rectangle I want a circle (radius, offsetX, offsetY)
     player.body.setCircle(100,0,0);
@@ -136,7 +141,7 @@ function create() {
 
     // Make camera follow player
     game.camera.follow(player, Phaser.Camera.FOLLOW_PLATFORMER);
-    
+
     // Menu Code
     menuWindow = game.add.sprite(game.world.x + 200, game.world.y + 100, 'menu');
     menuWindow.fixedToCamera = true;
@@ -147,6 +152,9 @@ function create() {
     // Hide it until button is clicked
     menuWindow.visible = false;
     menuWindow.scale.set(0.1); 
+
+    //  Check for the player hitting another object
+    player.body.onBeginContact.add(blockHit, this);
 
 }
 
@@ -265,6 +273,16 @@ function update() {
         }
         else {
             openWindow();
+            //delete this later, testing out possible ways to destroy everything and rebuild
+            game.world.removeAll();
+            player = game.add.sprite(200, game.world.height - 300, 'player');
+            player.scale.set(0.5);
+            player.anchor.setTo(0.5,0.5);
+            
+            game.physics.p2.enable(player);
+            player.body.fixedRotation = true;
+            player.body.setCircle(100,0,0);
+            player.animations.add('walk', [0, 1, 2, 1, 0, 3, 4, 3], 10, true);
         }
     }
 }
@@ -285,12 +303,48 @@ function touchingDown(someone) {
     } return result;
 }
 
+// Callback function used when player hits another object
+function blockHit (body, bodyB, shapeA, shapeB, equation) {
+
+    //  The block hit something.
+    //  
+    //  This callback is sent 5 arguments:
+    //  
+    //  The Phaser.Physics.P2.Body it is in contact with. *This might be null* if the Body was created directly in the p2 world.
+    //  The p2.Body this Body is in contact with.
+    //  The Shape from this body that caused the contact.
+    //  The Shape from the contact body.
+    //  The Contact Equation data array.
+    //  
+    //  The first argument may be null or not have a sprite property, such as when you hit the world bounds.
+    if (body && body.sprite) {
+        if (body.sprite.key == 'caveexit') {
+            loadForest();
+            result = 'LOADING FOREST AREA';
+        }
+    }
+}
+
+function loadForest() {
+    bg.destroy();
+    bg = game.add.tileSprite(0, 0, 3200, 2400, 'forestbg');
+    bg.sendToBack();
+    player.body.x = 2100;
+    player.body.y = 400;
+    
+    //Need to delete the collision boxes for the map and create new ones for the new map
+    //mymap = game.add.tilemap('testmap');
+    //mymap.addTilesetImage('test-tileset');    
+    //layerobjects_tiles = game.physics.p2.convertCollisionObjects(mymap,"objects1");  //Remove the original ones???
+}
+
 function render () {
 
-    game.debug.body(player);
+    //game.debug.body(player);
     //game.debug.bodyInfo(player, 16, 24);
     //game.debug.text('isDucking:' + isDucking + ' Velocity Y:' + player.body.velocity.y, 16, 24);
     //game.debug.cameraInfo(game.camera, 32, 32);
+    game.debug.text(result, 32, 32);
 
 }
 
@@ -327,4 +381,8 @@ function closeWindow() {
     tween = game.add.tween(menuWindow.scale).to( { x: 0.1, y: 0.1 }, 500, Phaser.Easing.Elastic.In, true);
     menuWindow.visible = false;
 
+}
+
+function testDestroy() {
+    game.destroy();
 }
