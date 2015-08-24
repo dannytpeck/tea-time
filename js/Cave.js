@@ -114,7 +114,7 @@ BasicGame.Cave.prototype = {
         //this.player = this.game.add.sprite(200, this.game.world.height - 300, 'player');
         this.player = this.game.add.sprite(200, this.game.world.height - 300, 'slimegirl', 'walk001');
         
-        this.player.scale.set(0.5);
+        this.player.scale.set(0.4); //40%
         //player.scale.x = 0.5;
         //player.scale.y = 0.5;
 
@@ -128,7 +128,7 @@ BasicGame.Cave.prototype = {
         this.player.body.fixedRotation = true;
         
         // instead of a rectangle I want a circle (radius, offsetX, offsetY)
-        this.player.body.setCircle(100,0,0);
+        this.player.body.setCircle(50,0,0);
     
         // this adds our animations for later use (custom cachekey, frames used for the animation, frames played per second, loop )
         // this.player.animations.add('walk', [0, 1, 2, 1, 0, 3, 4, 3], 10, true);
@@ -149,12 +149,13 @@ BasicGame.Cave.prototype = {
         // 1-2-3-2
         this.player.animations.add('walkslightangle', ['walkslightangle001', 'walkslightangle002', 'walkslightangle003', 'walkslightangle004'], 10, true, false);
 
-        this.player.animations.add('fallimpact', ['fallimpact', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017'], 10, false, false);
+        this.player.animations.add('fallimpact', [/*'fallimpact',*/ 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017'], 10, false, false);
 
         this.player.animations.add('unduck', ['unduck001', 'unduck002', 'unduck003', 'unduck004', 'unduck005', 'unduck006', 'unduck007', 'unduck008', 'unduck009', 'unduck010', 'unduck011'], 10, false, false);
 
         //when she's ducking, I imagined she'd do 1-5 and then 6-7-6-7-6-7 and then 8-18
-        this.player.animations.add('duck', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], 10, true);
+        this.player.animations.add('inhale', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], 10, true);
+        this.player.animations.add('duck', ['duck008', 'duck009', 'duck010', 'duck011', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017', 'duck018'], 10, true);
         
         // we need some cursor keys for our controls
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -217,25 +218,31 @@ BasicGame.Cave.prototype = {
             }
     
             // Player ducks if they press down arrow
-            if (this.touchingDown(this.player) && this.cursors.down.isDown) {
+            if ((!this.isFlattened || !this.isDucking) && this.touchingDown(this.player) && this.cursors.down.isDown) {
                 this.isDucking = true;
-                this.player.animations.play('duck');
+                //this.player.animations.play('inhale', 10, true);
+                this.player.animations.play('duck', 10, false); 
 
-                this.player.events.onAnimationComplete.addOnce(function(){
-                    this.player.animations.play('duckwalk'); //duck2?
-                }, this);
+                //this.player.events.onAnimationLoop.addOnce(function(){
+                //    this.player.animations.play('duck', 10, true); 
+                //}, this);
 
                 // Make box smaller when ducking
-                this.setPlayerSize();
+                //this.setPlayerSize();
             }
             
-            // Player stands when down arrow is released
-            if (this.isDucking && this.cursors.down.isUp) {
-                this.isDucking = false;
-                this.canJump = true;
-                
+            // Player stands up when down arrow is released
+            if ((this.isFlattened || this.isDucking) && this.cursors.down.isUp) {
+                this.player.animations.play('unduck', 10, false); 
+
+                this.player.events.onAnimationComplete.addOnce(function(){
+                    this.isDucking = false;
+                    this.isFlattened = false;
+                    this.canJump = true;
+                }, this);
+
                 // Make box larger when standing
-                this.setPlayerSize();
+                // this.setPlayerSize();
             }
             
             // Player jumps if the jump button is pressed
@@ -256,9 +263,10 @@ BasicGame.Cave.prototype = {
     
             // Stop falling when player touches the ground
             if (this.falling && this.touchingDown(this.player)) {
-                this.player.animations.play('fallimpact', 10, false, false);
+                this.player.animations.play('fallimpact', 10, false);
                 this.player.events.onAnimationComplete.addOnce(function(){
                     this.falling = false;
+                    this.isFlattened = true;
                 }, this);
             }
 
