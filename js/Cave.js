@@ -18,6 +18,7 @@ BasicGame.Cave = function (game) {
     this.canJump = true;
     this.falling = false;
     this.playedFallIntro = false;
+    this.isFlattened = false;
     
     this.menuButton;
     this.menuWindow;
@@ -140,14 +141,21 @@ BasicGame.Cave.prototype = {
         this.player.animations.add('idle', ['idle001', 'idle002', 'idle003', 'idle002', 'idle001', 'idle004', 'idle005', 'idle006'], 8, true, false);
 
         this.player.animations.add('turn', ['turn001', 'turn002', 'turn003', 'turn004'], 4, true, false);
-
+        
+        this.player.animations.add('startfalling', ['falling001', 'falling002', 'falling003', 'falling004']);
         // 5-6-7-6
-        this.player.animations.add('falling', ['falling005', 'falling006', 'falling007', 'falling006'], 10, true);
+        this.player.animations.add('falling', ['falling005', 'falling006', 'falling007', 'falling006'], 10, true, false);
         
         // 1-2-3-2
         this.player.animations.add('walkslightangle', ['walkslightangle001', 'walkslightangle002', 'walkslightangle003', 'walkslightangle004'], 10, true, false);
 
-    
+        this.player.animations.add('fallimpact', ['fallimpact', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017'], 10, false, false);
+
+        this.player.animations.add('unduck', ['unduck001', 'unduck002', 'unduck003', 'unduck004', 'unduck005', 'unduck006', 'unduck007', 'unduck008', 'unduck009', 'unduck010', 'unduck011'], 10, false, false);
+
+        //when she's ducking, I imagined she'd do 1-5 and then 6-7-6-7-6-7 and then 8-18
+        this.player.animations.add('duck', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], 10, true);
+        
         // we need some cursor keys for our controls
         this.cursors = this.input.keyboard.createCursorKeys();
         this.jumpButton = this.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -191,19 +199,19 @@ BasicGame.Cave.prototype = {
             if (this.cursors.left.isDown) {
                 this.player.body.velocity.x = -MOVE_SPEED;
                 this.facing = 'left';
-                if (!this.falling) {
+                if (!this.falling && !this.isDucking) {
                     this.player.animations.play('walk');
                 }
             }
             else if (this.cursors.right.isDown) {
                 this.player.body.velocity.x = MOVE_SPEED;
                 this.facing = 'right';
-                if (!this.falling) {
+                if (!this.falling && !this.isDucking) {
                     this.player.animations.play('walk');
                 }
             }
             else {
-                if (!this.falling) {
+                if (!this.falling && !this.isDucking) {
                     this.player.animations.play('idle');
                 }
             }
@@ -211,8 +219,12 @@ BasicGame.Cave.prototype = {
             // Player ducks if they press down arrow
             if (this.touchingDown(this.player) && this.cursors.down.isDown) {
                 this.isDucking = true;
-                this.canJump = false;
-                
+                this.player.animations.play('duck');
+
+                this.player.events.onAnimationComplete.addOnce(function(){
+                    this.player.animations.play('duckwalk'); //duck2?
+                }, this);
+
                 // Make box smaller when ducking
                 this.setPlayerSize();
             }
@@ -244,13 +256,20 @@ BasicGame.Cave.prototype = {
     
             // Stop falling when player touches the ground
             if (this.falling && this.touchingDown(this.player)) {
-                this.falling = false;
+                this.player.animations.play('fallimpact', 10, false, false);
+                this.player.events.onAnimationComplete.addOnce(function(){
+                    this.falling = false;
+                }, this);
             }
 
             // Falling animation    
-            if (!this.falling && this.player.body.velocity.y > 200) {
-                this.player.animations.play('falling', 10, true);
+            if (!this.falling && this.player.body.velocity.y > 100) {
                 this.falling = true;
+                this.player.animations.play('startfalling', 10, false, false);
+                
+                this.player.events.onAnimationComplete.addOnce(function(){
+			        this.player.animations.play('falling', 10, true, false);
+		        }, this);
             } 
 
             if (this.facing == 'left' && this.player.scale.x > 0) {
