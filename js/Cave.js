@@ -14,8 +14,8 @@ BasicGame.Cave = function (game) {
     this.jumpTimer = 0;
     
     // Flags for various actions
-    this.isDucking = false;
-    this.canJump = true;
+    this.ducking = false;
+    this.flat = false;
     this.falling = false;
     this.playedFallIntro = false;
     this.isFlattened = false;
@@ -114,6 +114,7 @@ BasicGame.Cave.prototype = {
         //this.player = this.game.add.sprite(200, this.game.world.height - 300, 'player');
         this.player = this.game.add.sprite(200, this.game.world.height - 300, 'slimegirl', 'walk001');
         
+        this.player.alpha = 0.75;
         this.player.scale.set(0.4); //40%
         //player.scale.x = 0.5;
         //player.scale.y = 0.5;
@@ -128,7 +129,7 @@ BasicGame.Cave.prototype = {
         this.player.body.fixedRotation = true;
         
         // instead of a rectangle I want a circle (radius, offsetX, offsetY)
-        this.player.body.setCircle(50,0,0);
+        this.player.body.setCircle(75,0,0);
     
         // this adds our animations for later use (custom cachekey, frames used for the animation, frames played per second, loop )
         // this.player.animations.add('walk', [0, 1, 2, 1, 0, 3, 4, 3], 10, true);
@@ -154,8 +155,11 @@ BasicGame.Cave.prototype = {
         this.player.animations.add('unduck', ['unduck001', 'unduck002', 'unduck003', 'unduck004', 'unduck005', 'unduck006', 'unduck007', 'unduck008', 'unduck009', 'unduck010', 'unduck011'], 10, false, false);
 
         //when she's ducking, I imagined she'd do 1-5 and then 6-7-6-7-6-7 and then 8-18
-        this.player.animations.add('inhale', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], 10, true);
-        this.player.animations.add('duck', ['duck008', 'duck009', 'duck010', 'duck011', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017', 'duck018'], 10, true);
+        this.player.animations.add('inhale', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], 10, false);
+        this.player.animations.add('duck', ['duck008', 'duck009', 'duck010', 'duck011', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017'], 10, false);
+        this.player.animations.add('beginduckwalk', ['duckwalk001', 'duckwalk002', 'duckwalk003'], 10, false);
+        this.player.animations.add('duckwalk', ['duckwalk004', 'duckwalk005', 'duckwalk006', 'duckwalk007'], 10, true);
+        
         
         // we need some cursor keys for our controls
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -200,45 +204,81 @@ BasicGame.Cave.prototype = {
             if (this.cursors.left.isDown) {
                 this.player.body.velocity.x = -MOVE_SPEED;
                 this.facing = 'left';
-                if (!this.falling && !this.isDucking) {
-                    this.player.animations.play('walk');
+                if (!this.falling) {
+                    if (this.ducking) {
+                        this.player.animations.play('duckwalk');
+                    }
+                    else {
+                        this.player.animations.play('walk');
+                    }
                 }
             }
             else if (this.cursors.right.isDown) {
                 this.player.body.velocity.x = MOVE_SPEED;
                 this.facing = 'right';
-                if (!this.falling && !this.isDucking) {
-                    this.player.animations.play('walk');
+                if (!this.falling) {
+                    if (this.ducking) {
+                        this.player.animations.play('duckwalk');
+                    }
+                    else {
+                        this.player.animations.play('walk');
+                    }
                 }
             }
             else {
-                if (!this.falling && !this.isDucking) {
+                if (!this.falling && !this.ducking) {
                     this.player.animations.play('idle');
                 }
             }
+
+
+            // Ducking animation (template)
+            if (!this.ducking && this.cursors.down.isDown) {
+                this.ducking = true; //this must go here to prevent animation from starting over and over again forever
+                this.player.animations.play('inhale', 10, false, false);
+                
+                this.player.events.onAnimationComplete.addOnce(function(){
+			        this.player.animations.play('duck', 10, false, false);
+			        this.player.events.onAnimationComplete.addOnce(function(){
+			            this.beginNextAnimation = true;
+			        }, this);
+		        }, this);
+            }
+            
+            // Chaining animation test
+            if (this.beginNextAnimation && !this.flat && this.cursors.down.isDown) {
+                this.flat = true; //this must go here to prevent animation from starting over and over again forever
+                this.player.animations.play('beginduckwalk', 10, false, false);
+                
+                this.player.events.onAnimationComplete.addOnce(function(){
+			       this.player.animations.play('duckwalk', 10, true, false);
+		        }, this);
+            }
     
+            /*
             // Player ducks if they press down arrow
-            if ((!this.isFlattened || !this.isDucking) && this.touchingDown(this.player) && this.cursors.down.isDown) {
-                this.isDucking = true;
+            if ((!this.isFlattened || !this.ducking) && this.cursors.down.isDown) {
+                this.ducking = true;
                 //this.player.animations.play('inhale', 10, true);
                 this.player.animations.play('duck', 10, false); 
-
+                this.ducking = true;
                 //this.player.events.onAnimationLoop.addOnce(function(){
                 //    this.player.animations.play('duck', 10, true); 
                 //}, this);
 
                 // Make box smaller when ducking
                 //this.setPlayerSize();
-            }
+            } */
             
             // Player stands up when down arrow is released
-            if ((this.isFlattened || this.isDucking) && this.cursors.down.isUp) {
+            if ((this.flat || this.ducking) && this.cursors.down.isUp) {
+                this.recoverFromFall = false;
                 this.player.animations.play('unduck', 10, false); 
 
-                this.player.events.onAnimationComplete.addOnce(function(){
-                    this.isDucking = false;
-                    this.isFlattened = false;
-                    this.canJump = true;
+                this.player.events.onAnimationComplete.addOnce(function() {
+                    this.ducking = false;
+                    this.flat = false;
+                    this.beginNextAnimation = false;
                 }, this);
 
                 // Make box larger when standing
@@ -246,39 +286,32 @@ BasicGame.Cave.prototype = {
             }
             
             // Player jumps if the jump button is pressed
-            if (this.canJump && this.jumpButton.isDown && this.time.now > this.jumpTimer && this.touchingDown(this.player) ) {
-                this.player.body.velocity.y = JUMP_HEIGHT;
-                this.jumpTimer = this.time.now + 400;
-            }
-        
-            // Jumping animation
-            if (this.player.body.velocity.y < -50) {
-                if (this.facing == 'left') {
-                    this.player.animations.play('walk');
-                }
-                else if (this.facing == 'right') {
-                    this.player.animations.play('walk');
-                }
-            }
+            //if (this.jumpButton.isDown && this.time.now > this.jumpTimer && this.touchingDown(this.player) ) {
+            //    this.player.body.velocity.y = JUMP_HEIGHT;
+            //    this.jumpTimer = this.time.now + 400;
+            //    }
     
             // Stop falling when player touches the ground
             if (this.falling && this.touchingDown(this.player)) {
                 this.player.animations.play('fallimpact', 10, false);
-                this.player.events.onAnimationComplete.addOnce(function(){
+                
+                this.player.events.onAnimationComplete.addOnce(function() {
                     this.falling = false;
-                    this.isFlattened = true;
                 }, this);
             }
 
             // Falling animation    
-            if (!this.falling && this.player.body.velocity.y > 100) {
+            if (!this.ducking && !this.falling && this.player.body.velocity.y > 200) {
                 this.falling = true;
                 this.player.animations.play('startfalling', 10, false, false);
                 
-                this.player.events.onAnimationComplete.addOnce(function(){
+                this.player.events.onAnimationComplete.addOnce(function() {
 			        this.player.animations.play('falling', 10, true, false);
 		        }, this);
             } 
+
+            /* END ANIMATION CODE */
+            /* THANK GOD */
 
             if (this.facing == 'left' && this.player.scale.x > 0) {
                 this.player.scale.x *= -1;
@@ -354,7 +387,7 @@ BasicGame.Cave.prototype = {
     },
     
     setPlayerSize: function() {
-        if (this.isDucking) {
+        if (this.ducking) {
             this.player.body.setCircle(50, 0, 50);
         }
         else {
