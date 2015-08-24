@@ -16,6 +16,8 @@ BasicGame.Cave = function (game) {
     // Flags for various actions
     this.isDucking = false;
     this.canJump = true;
+    this.falling = false;
+    this.playedFallIntro = false;
     
     this.menuButton;
     this.menuWindow;
@@ -26,6 +28,9 @@ BasicGame.Cave = function (game) {
     this.exit;
     this.result = 'Nothing to report!';
     
+    this.timeCheck;
+    this.delay = 0;
+
 };
 
 BasicGame.Cave.prototype = {
@@ -133,15 +138,15 @@ BasicGame.Cave.prototype = {
         this.player.animations.add('walk', ['walk001', 'walk002', 'walk003', 'walk002', 'walk001', 'walk004', 'walk005', 'walk004'], 10, true, false);
         // 1-2-3-2-1-4-5-6
         this.player.animations.add('idle', ['idle001', 'idle002', 'idle003', 'idle002', 'idle001', 'idle004', 'idle005', 'idle006'], 8, true, false);
+
+        this.player.animations.add('turn', ['turn001', 'turn002', 'turn003', 'turn004'], 4, true, false);
+
+        // 5-6-7-6
+        this.player.animations.add('falling', ['falling005', 'falling006', 'falling007', 'falling006'], 10, true);
         
-        //player.animations.add('jump-left', [16], 10, true);
-        //player.animations.add('jump-right', [17], 10, true);
-        //player.animations.add('fall-left', [18], 10, true);
-        //player.animations.add('fall-right', [19], 10, true);
-        //player.animations.add('wallstick-left', [20], 10, true);
-        //player.animations.add('wallstick-right', [21], 10, true);
-        //player.animations.add('duck-left', [22], 10, true);
-        //player.animations.add('duck-right', [23], 10, true);
+        // 1-2-3-2
+        this.player.animations.add('walkslightangle', ['walkslightangle001', 'walkslightangle002', 'walkslightangle003', 'walkslightangle004'], 10, true, false);
+
     
         // we need some cursor keys for our controls
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -170,6 +175,8 @@ BasicGame.Cave.prototype = {
         this.physics.p2.enable(this.exit);
         this.exit.body.static = true;
 
+        this.timeCheck = this.time.now;
+    
     },
 
     update: function () {
@@ -177,100 +184,91 @@ BasicGame.Cave.prototype = {
         // Resets player velocity every update
         this.player.body.velocity.x = 0;
 
-        if (this.cursors.left.isDown) {
-            this.player.scale.x = -0.5;
-            this.player.body.velocity.x = -MOVE_SPEED;
-            
-            if (this.isDucking) {
-                this.player.animations.play('walk');
+        
+        // test for 3 second delay with a delay = 3000 milliseconds
+        if (this.time.now - this.timeCheck > this.delay) {
+
+            if (this.cursors.left.isDown) {
+                this.player.body.velocity.x = -MOVE_SPEED;
+                this.facing = 'left';
+                if (!this.falling) {
+                    this.player.animations.play('walk');
+                }
+            }
+            else if (this.cursors.right.isDown) {
+                this.player.body.velocity.x = MOVE_SPEED;
+                this.facing = 'right';
+                if (!this.falling) {
+                    this.player.animations.play('walk');
+                }
             }
             else {
-                this.player.animations.play('walk');
+                if (!this.falling) {
+                    this.player.animations.play('idle');
+                }
             }
-            this.facing = 'left';
-        }
-        else if (this.cursors.right.isDown) {
-            this.player.scale.x = 0.5;
-            this.player.body.velocity.x = MOVE_SPEED;
-            
-            if (this.isDucking) {
-                this.player.animations.play('walk');
-            }
-            else {
-                this.player.animations.play('walk');
-            }
-            this.facing = 'right';
-        }
-        else {
-            //this.player.animations.stop();
     
-            if (this.isDucking) {
-                this.player.frame = 0;
+            // Player ducks if they press down arrow
+            if (this.touchingDown(this.player) && this.cursors.down.isDown) {
+                this.isDucking = true;
+                this.canJump = false;
+                
+                // Make box smaller when ducking
+                this.setPlayerSize();
             }
-            else {
-                // Play idle animation if not moving
-                this.player.animations.play('idle');
-            }
-        }
-        
-        // Player ducks if they press down arrow
-        if (this.touchingDown(this.player) && this.cursors.down.isDown) {
-            this.isDucking = true;
-            this.canJump = false;
             
-            // Make box smaller when ducking
-            this.setPlayerSize();
-        }
-        
-        // Player stands when down arrow is released
-        if (this.isDucking && this.cursors.down.isUp) {
-            this.isDucking = false;
-            this.canJump = true;
+            // Player stands when down arrow is released
+            if (this.isDucking && this.cursors.down.isUp) {
+                this.isDucking = false;
+                this.canJump = true;
+                
+                // Make box larger when standing
+                this.setPlayerSize();
+            }
             
-            // Make box larger when standing
-            this.setPlayerSize();
-        }
+            // Player jumps if the jump button is pressed
+            if (this.canJump && this.jumpButton.isDown && this.time.now > this.jumpTimer && this.touchingDown(this.player) ) {
+                this.player.body.velocity.y = JUMP_HEIGHT;
+                this.jumpTimer = this.time.now + 400;
+            }
         
-        // Player jumps if the jump button is pressed
-        if (this.canJump && this.jumpButton.isDown && this.time.now > this.jumpTimer && this.touchingDown(this.player) ) {
-            this.player.body.velocity.y = JUMP_HEIGHT;
-            this.jumpTimer = this.time.now + 400;
-        }
+            // Jumping animation
+            if (this.player.body.velocity.y < -50) {
+                if (this.facing == 'left') {
+                    this.player.animations.play('walk');
+                }
+                else if (this.facing == 'right') {
+                    this.player.animations.play('walk');
+                }
+            }
     
-        // Jumping animation
-        if (this.player.body.velocity.y < -50) {
-            if (this.facing == 'left') {
-                this.player.animations.play('walk');
+            // Stop falling when player touches the ground
+            if (this.falling && this.touchingDown(this.player)) {
+                this.falling = false;
             }
-            else if (this.facing == 'right') {
-                this.player.animations.play('walk');
+
+            // Falling animation    
+            if (!this.falling && this.player.body.velocity.y > 200) {
+                this.player.animations.play('falling', 10, true);
+                this.falling = true;
+            } 
+
+            if (this.facing == 'left' && this.player.scale.x > 0) {
+                this.player.scale.x *= -1;
             }
-        }
-    
-        /* Falling animation    
-        if (this.player.body.velocity.y > 100) {
-            if (this.facing == 'left') {
-                this.player.animations.play('walk');
+            else if (this.facing == 'right' && this.player.scale.x < 0) {
+                this.player.scale.x *= -1;
             }
-            else if (this.facing == 'right') {
-                this.player.animations.play('walk');
+            
+            if (this.menuButton.isDown) {
+                if (this.menuWindow.visible) {
+                    this.closeWindow();
+                }
+                else {
+                    this.openWindow();
+                }
             }
-        } */
-        
-        if (this.facing == 'left' && this.player.scale.x > 0) {
-            this.player.scale.x *= -1;
-        }
-        else if (this.facing == 'right' && this.player.scale.x < 0) {
-            this.player.scale.x *= 1;
-        }
-        
-        if (this.menuButton.isDown) {
-            if (this.menuWindow.visible) {
-                this.closeWindow();
-            }
-            else {
-                this.openWindow();
-            }
+         
         }
 
     },
@@ -339,8 +337,7 @@ BasicGame.Cave.prototype = {
     
     openWindow: function() {
     
-        if (this.tween !== null && this.tween.isRunning)
-        {
+        if (this.tween !== null && this.tween.isRunning) {
             return;
         }
         
@@ -352,8 +349,7 @@ BasicGame.Cave.prototype = {
     
     closeWindow: function() {
     
-        if (this.tween && this.tween.isRunning)
-        {
+        if (this.tween && this.tween.isRunning) {
             return;
         }
     
