@@ -6,11 +6,12 @@ var GRAVITY = 1400; //1400
 
 BasicGame.Cave = function (game) {
     
-    this.player;
     this.facing = 'right';
     
     this.cursors;
     this.jumpButton;
+    this.menuButton;
+        
     this.jumpTimer = 0;
     
     // Flags for various actions
@@ -20,7 +21,7 @@ BasicGame.Cave = function (game) {
     this.playedFallIntro = false;
     this.isFlattened = false;
     
-    this.menuButton;
+
     this.menuWindow;
     this.tween = null;
     
@@ -37,31 +38,6 @@ BasicGame.Cave = function (game) {
 
 BasicGame.Cave.prototype = {
 
-/*
-	preload: function () {
-
-		// Here we load the assets our game needs.
-
-        // Load the json tilemaps created with tiled (cachekey, filename, type of tilemap parser)
-        this.load.tilemap('testmap', 'assets/test-tilemap-polygon.json', null, Phaser.Tilemap.TILED_JSON);
-        this.load.tilemap('forest', 'assets/forest.json', null, Phaser.Tilemap.TILED_JSON);  
-
-        // Load the tileset images used in tiled to create the map  (cachekey, filename)
-        this.load.image('test-tileset', 'assets/test-tileset.png');
-
-        // Load the player's spritesheet
-        this.load.spritesheet('player', 'assets/slimegirl.png', 400, 400);
-
-        this.load.image('menu', 'assets/menu window.png');
-        
-        // Load the background images
-        this.load.image('tutorialcave', 'assets/Tutorial Cave.png');
-        this.load.image('forestbg', 'assets/The Forest.png');
-        
-        this.load.image('caveexit', 'assets/tutorial-cave-exit.png');
-
-	},
-*/	
     create: function () {
 
         // Enable P2
@@ -69,9 +45,6 @@ BasicGame.Cave.prototype = {
     
         // Turn on impact events for the world, without this we get no collision callbacks
         this.physics.p2.setImpactEvents(true);
-        
-        // Makes objects bounce off each other
-        // this.physics.p2.restitution = 0.8;
     
         // this creates an almost realistic gravity
         this.physics.p2.gravity.y = GRAVITY; 
@@ -111,60 +84,13 @@ BasicGame.Cave.prototype = {
         /*these polyline physics bodies will not be visible - so make sure you paint your hills and slanted tiles on a layer that acts as background (without collision enabled) */
         this.layerobjects_tiles = this.physics.p2.convertCollisionObjects(this.mymap,"objects1");
         
-        //this adds our player to the scene  (xposition, yposition, cachekey)
-        this.player = this.add.sprite(150, this.world.height - 100, 'slimegirl');
+        // set up start location and add player to the map
+        var startX = 150;
+        var startY = this.world.height - 100;
+        this.player = new Player(this.game, startX, startY, 'slimegirl');
+        this.game.add.existing(this.player);
 
         this.exit = this.add.sprite(32, 256, 'caveexit');
-        
-        //this.player.alpha = 0.75;
-        this.player.scale.set(0.4); //40%
-
-        // enable physics for the player (p2)
-        this.physics.p2.enable(this.player);
-    
-        // set the anchor to the exact middle of the player (good for flipping the image on the same place)
-        this.player.anchor.setTo(0.5,0.5);
-        
-        // in p2 rotation is possible.. i don't want this on my player 
-        this.player.body.fixedRotation = true;
-        
-        // instead of a rectangle I want a circle (radius, offsetX, offsetY)
-        this.player.body.setCircle(75,0,0);
-    
-        // this adds our animations for later use (custom cachekey, frames used for the animation, frames played per second, loop )
-        // Using a JSON hash, we can call forth our images by their filename
-        // 1-2-3-2-1-4-5-4
-        this.player.animations.add('walk', ['walk001', 'walk002', 'walk003', 'walk002', 'walk001', 'walk004', 'walk005', 'walk004'], 10, true, false);
-        // 1-2-3-2-1-4-5-6
-        this.player.animations.add('idle', ['idle001', 'idle002', 'idle003', 'idle002', 'idle001', 'idle004', 'idle005', 'idle006'], 8, true, false);
-
-        this.player.animations.add('turn', ['turn001', 'turn002', 'turn003', 'turn004'], 4, true, false);
-        
-        this.player.animations.add('startfalling', ['falling001', 'falling002', 'falling003', 'falling004']);
-        // 5-6-7-6
-        this.player.animations.add('falling', ['falling005', 'falling006', 'falling007', 'falling006'], 10, true, false);
-        
-        // 1-2-3-2
-        this.player.animations.add('walkslightangle', ['walkslightangle001', 'walkslightangle002', 'walkslightangle003', 'walkslightangle004'], 10, true, false);
-
-        this.player.animations.add('fallimpact', [/*'fallimpact',*/ 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017'], 10, false, false);
-
-        this.player.animations.add('unduck', ['unduck001', 'unduck002', 'unduck003', 'unduck004', 'unduck005', 'unduck006', 'unduck007', 'unduck008', 'unduck009', 'unduck010', 'unduck011'], 10, false, false);
-
-        //when she's ducking, I imagined she'd do 1-5 and then 6-7-6-7-6-7 and then 8-18
-        this.player.animations.add('inhale', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], 10, false);
-        this.player.animations.add('duck', ['duck008', 'duck009', 'duck010', 'duck011', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017'], 10, false);
-        this.player.animations.add('beginduckwalk', ['duckwalk001', 'duckwalk002', 'duckwalk003'], 10, false);
-        this.player.animations.add('duckwalk', ['duckwalk004', 'duckwalk005', 'duckwalk006', 'duckwalk007'], 10, true);
-        
-        
-        // we need some cursor keys for our controls
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.jumpButton = this.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-        this.menuButton = this.input.keyboard.addKey(Phaser.Keyboard.ESC);
-    
-        // Make camera follow player
-        this.game.camera.follow(this.player, Phaser.Camera.FOLLOW_PLATFORMER);
     
         // Menu Code
         this.menuWindow = this.add.sprite(this.world.x + 200, this.world.y + 100, 'menu');
@@ -196,6 +122,7 @@ BasicGame.Cave.prototype = {
         //this.game.debug.text('isDucking:' + this.ducking + ' Velocity Y:' + this.player.body.velocity.y, 16, 24);
 
         // Resets player velocity every update
+        /*
         this.player.body.velocity.x = 0;
 
         if (this.cursors.left.isDown && !this.immobile) {
@@ -291,6 +218,7 @@ BasicGame.Cave.prototype = {
         /* END ANIMATION CODE */
         /* THANK GOD */
 
+        /*
         if (this.facing == 'left' && this.player.scale.x > 0) {
             this.player.scale.x *= -1;
         }
@@ -305,7 +233,7 @@ BasicGame.Cave.prototype = {
             else {
                 this.openWindow();
             }
-        }
+        } */
 
     },
 
