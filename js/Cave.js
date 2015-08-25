@@ -27,10 +27,11 @@ BasicGame.Cave = function (game) {
     this.hills;
     this.bg;
     this.exit;
-    this.result = 'Nothing to report!';
-    
+
     this.timeCheck;
     this.delay = 0;
+    
+    this.immobile = false;
 
 };
 
@@ -111,13 +112,12 @@ BasicGame.Cave.prototype = {
         this.layerobjects_tiles = this.physics.p2.convertCollisionObjects(this.mymap,"objects1");
         
         //this adds our player to the scene  (xposition, yposition, cachekey)
-        //this.player = this.game.add.sprite(200, this.game.world.height - 300, 'player');
-        this.player = this.game.add.sprite(200, this.game.world.height - 300, 'slimegirl', 'walk001');
+        this.player = this.add.sprite(150, this.world.height - 100, 'slimegirl');
+
+        this.exit = this.add.sprite(32, 256, 'caveexit');
         
-        this.player.alpha = 0.75;
+        //this.player.alpha = 0.75;
         this.player.scale.set(0.4); //40%
-        //player.scale.x = 0.5;
-        //player.scale.y = 0.5;
 
         // enable physics for the player (p2)
         this.physics.p2.enable(this.player);
@@ -132,10 +132,7 @@ BasicGame.Cave.prototype = {
         this.player.body.setCircle(75,0,0);
     
         // this adds our animations for later use (custom cachekey, frames used for the animation, frames played per second, loop )
-        // this.player.animations.add('walk', [0, 1, 2, 1, 0, 3, 4, 3], 10, true);
-        
-        // Use an atlas instead (generateFrameNames('animation name', firstIndex, lastIndex, suffixString, zeroPadding)
-        //this.player.animations.add('walk', Phaser.Animation.generateFrameNames('walk', 1, 5, '', 3), 10, true, false);
+        // Using a JSON hash, we can call forth our images by their filename
         // 1-2-3-2-1-4-5-4
         this.player.animations.add('walk', ['walk001', 'walk002', 'walk003', 'walk002', 'walk001', 'walk004', 'walk005', 'walk004'], 10, true, false);
         // 1-2-3-2-1-4-5-6
@@ -194,141 +191,120 @@ BasicGame.Cave.prototype = {
 
     update: function () {
 
+        // Debug stuff
+        //this.player.body.debug = true;
+        //this.game.debug.text('isDucking:' + this.ducking + ' Velocity Y:' + this.player.body.velocity.y, 16, 24);
+
         // Resets player velocity every update
         this.player.body.velocity.x = 0;
 
-        
-        // test for 3 second delay with a delay = 3000 milliseconds
-        if (this.time.now - this.timeCheck > this.delay) {
-
-            if (this.cursors.left.isDown) {
-                this.player.body.velocity.x = -MOVE_SPEED;
-                this.facing = 'left';
-                if (!this.falling) {
-                    if (this.ducking) {
-                        this.player.animations.play('duckwalk');
-                    }
-                    else {
-                        this.player.animations.play('walk');
-                    }
-                }
-            }
-            else if (this.cursors.right.isDown) {
-                this.player.body.velocity.x = MOVE_SPEED;
-                this.facing = 'right';
-                if (!this.falling) {
-                    if (this.ducking) {
-                        this.player.animations.play('duckwalk');
-                    }
-                    else {
-                        this.player.animations.play('walk');
-                    }
-                }
-            }
-            else {
-                if (!this.falling && !this.ducking) {
-                    this.player.animations.play('idle');
-                }
-            }
-
-
-            // Ducking animation (template)
-            if (!this.ducking && this.cursors.down.isDown) {
-                this.ducking = true; //this must go here to prevent animation from starting over and over again forever
-                this.player.animations.play('inhale', 10, false, false);
-                
-                this.player.events.onAnimationComplete.addOnce(function(){
-			        this.player.animations.play('duck', 10, false, false);
-			        this.player.events.onAnimationComplete.addOnce(function(){
-			            this.beginNextAnimation = true;
-			        }, this);
-		        }, this);
-            }
-            
-            // Chaining animation test
-            if (this.beginNextAnimation && !this.flat && this.cursors.down.isDown) {
-                this.flat = true; //this must go here to prevent animation from starting over and over again forever
-                this.player.animations.play('beginduckwalk', 10, false, false);
-                
-                this.player.events.onAnimationComplete.addOnce(function(){
-			       this.player.animations.play('duckwalk', 10, true, false);
-		        }, this);
-            }
-    
-            /*
-            // Player ducks if they press down arrow
-            if ((!this.isFlattened || !this.ducking) && this.cursors.down.isDown) {
-                this.ducking = true;
-                //this.player.animations.play('inhale', 10, true);
-                this.player.animations.play('duck', 10, false); 
-                this.ducking = true;
-                //this.player.events.onAnimationLoop.addOnce(function(){
-                //    this.player.animations.play('duck', 10, true); 
-                //}, this);
-
-                // Make box smaller when ducking
-                //this.setPlayerSize();
-            } */
-            
-            // Player stands up when down arrow is released
-            if ((this.flat || this.ducking) && this.cursors.down.isUp) {
-                this.recoverFromFall = false;
-                this.player.animations.play('unduck', 10, false); 
-
-                this.player.events.onAnimationComplete.addOnce(function() {
-                    this.ducking = false;
-                    this.flat = false;
-                    this.beginNextAnimation = false;
-                }, this);
-
-                // Make box larger when standing
-                // this.setPlayerSize();
-            }
-            
-            // Player jumps if the jump button is pressed
-            //if (this.jumpButton.isDown && this.time.now > this.jumpTimer && this.touchingDown(this.player) ) {
-            //    this.player.body.velocity.y = JUMP_HEIGHT;
-            //    this.jumpTimer = this.time.now + 400;
-            //    }
-    
-            // Stop falling when player touches the ground
-            if (this.falling && this.touchingDown(this.player)) {
-                this.player.animations.play('fallimpact', 10, false);
-                
-                this.player.events.onAnimationComplete.addOnce(function() {
-                    this.falling = false;
-                }, this);
-            }
-
-            // Falling animation    
-            if (!this.ducking && !this.falling && this.player.body.velocity.y > 500) {
-                this.falling = true;
-                this.player.animations.play('startfalling', 10, false, false);
-                
-                this.player.events.onAnimationComplete.addOnce(function() {
-			        this.player.animations.play('falling', 10, true, false);
-		        }, this);
-            } 
-
-            /* END ANIMATION CODE */
-            /* THANK GOD */
-
-            if (this.facing == 'left' && this.player.scale.x > 0) {
-                this.player.scale.x *= -1;
-            }
-            else if (this.facing == 'right' && this.player.scale.x < 0) {
-                this.player.scale.x *= -1;
-            }
-            
-            if (this.menuButton.isDown) {
-                if (this.menuWindow.visible) {
-                    this.closeWindow();
+        if (this.cursors.left.isDown && !this.immobile) {
+            this.player.body.velocity.x = -MOVE_SPEED;
+            this.facing = 'left';
+            if (!this.falling) {
+                if (this.ducking) {
+                    this.player.animations.play('duckwalk');
                 }
                 else {
-                    this.openWindow();
+                    this.player.animations.play('walk');
                 }
             }
-         
+        }
+        else if (this.cursors.right.isDown && !this.immobile) {
+            this.player.body.velocity.x = MOVE_SPEED;
+            this.facing = 'right';
+            if (!this.falling) {
+                if (this.ducking) {
+                    this.player.animations.play('duckwalk');
+                }
+                else {
+                    this.player.animations.play('walk');
+                }
+            }
+        }
+        else {
+            if (!this.falling && !this.ducking) {
+                this.player.animations.play('idle');
+            }
+        }
+
+        // Ducking animation
+        if (!this.ducking && this.cursors.down.isDown) {
+            this.immobile = true; //stop left/right movement during animation
+            this.ducking = true; //this must go here to prevent animation from starting over and over again forever
+            this.player.animations.play('inhale', 10, false, false);
+            
+            this.player.events.onAnimationComplete.addOnce(function(){
+		        this.player.animations.play('duck', 10, false, false);
+		        
+		        this.player.events.onAnimationComplete.addOnce(function(){
+		            this.player.animations.play('beginduckwalk', 10, false, false);
+		            
+	                this.player.events.onAnimationComplete.addOnce(function(){
+		                this.player.animations.play('duckwalk', 10, true, false);
+		                this.immobile = false;
+		                this.setPlayerSize(); // Make smaller when ducking
+		            }, this);
+		        }, this);
+	        }, this);
+        }
+        
+        // Player stands up when the up arrow is pressed
+        if (this.ducking && this.cursors.up.isDown) {
+            this.immobile = true;
+            this.player.animations.play('unduck', 10, false); 
+
+            this.player.events.onAnimationComplete.addOnce(function() {
+                this.ducking = false;
+                this.immobile = false;
+                this.setPlayerSize(); // Make larger when player stands up
+            }, this);
+        }
+        
+        // Player jumps if the jump button is pressed
+        //if (this.jumpButton.isDown && this.time.now > this.jumpTimer && this.touchingDown(this.player) ) {
+        //    this.player.body.velocity.y = JUMP_HEIGHT;
+        //    this.jumpTimer = this.time.now + 400;
+        //    }
+
+        // Stop falling when player touches the ground
+        if (this.falling && this.touchingDown(this.player)) {
+            this.player.animations.play('fallimpact', 10, false);
+            
+            this.player.events.onAnimationComplete.addOnce(function() {
+                this.falling = false;
+                this.ducking = true;
+                this.player.animations.play('duckwalk', 10, true);
+            }, this);
+        }
+
+        // Falling animation    
+        if (!this.ducking && !this.falling && this.player.body.velocity.y > 500) {
+            this.falling = true;
+            this.player.animations.play('startfalling', 10, false, false);
+            
+            this.player.events.onAnimationComplete.addOnce(function() {
+		        this.player.animations.play('falling', 10, true, false);
+	        }, this);
+        } 
+
+        /* END ANIMATION CODE */
+        /* THANK GOD */
+
+        if (this.facing == 'left' && this.player.scale.x > 0) {
+            this.player.scale.x *= -1;
+        }
+        else if (this.facing == 'right' && this.player.scale.x < 0) {
+            this.player.scale.x *= -1;
+        }
+        
+        if (this.menuButton.isDown) {
+            if (this.menuWindow.visible) {
+                this.closeWindow();
+            }
+            else {
+                this.openWindow();
+            }
         }
 
     },
@@ -388,10 +364,10 @@ BasicGame.Cave.prototype = {
     
     setPlayerSize: function() {
         if (this.ducking) {
-            this.player.body.setCircle(50, 0, 50);
+            this.player.body.setCircle(20, 0, 55);
         }
         else {
-            this.player.body.setCircle(100, 0, 0);
+            this.player.body.setCircle(75, 0, 0);
         }
     },
     
@@ -432,5 +408,5 @@ BasicGame.Cave.prototype = {
         //mymap.addTilesetImage('test-tileset');    
         //layerobjects_tiles = game.physics.p2.convertCollisionObjects(mymap,"objects1");  //Remove the original ones???
     }
-
+    
 };
