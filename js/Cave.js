@@ -2,7 +2,7 @@ var WIDTH = 800;
 var HEIGHT = 600;
 var MOVE_SPEED = 400;
 var JUMP_HEIGHT = -700;
-var GRAVITY = 500; //1400
+var GRAVITY = 1400; //1400
 
 BasicGame.Cave = function (game) {
     
@@ -301,7 +301,7 @@ BasicGame.Cave.prototype = {
             }
 
             // Falling animation    
-            if (!this.ducking && !this.falling && this.player.body.velocity.y > 200) {
+            if (!this.ducking && !this.falling && this.player.body.velocity.y > 500) {
                 this.falling = true;
                 this.player.animations.play('startfalling', 10, false, false);
                 
