@@ -1,6 +1,9 @@
 var PLAYER_SPEED = 400;
 
-var Player = function (game, x, y, name) {
+Player = function (game, x, y, name) {
+    
+    this.game = game;
+    this.tween = null;
     
     Phaser.Sprite.call(this, game, x, y, name);
     //game.physics.enable(this, Phaser.Physics.ARCADE);
@@ -16,7 +19,7 @@ var Player = function (game, x, y, name) {
     //this.initialX = x;
     //this.initialY = y;
     
-    this.scale.set(0.4); //40%
+    this.scale.set(0.5); //50%
     this.body.fixedRotation = true;
     this.body.setCircle(75,0,0);
 
@@ -33,18 +36,33 @@ var Player = function (game, x, y, name) {
     this.animations.add('beginduckwalk', ['duckwalk001', 'duckwalk002', 'duckwalk003'], 10, false);
     this.animations.add('duckwalk', ['duckwalk004', 'duckwalk005', 'duckwalk006', 'duckwalk005'], 10, true);
     
-    this.state = this.Standing;
+    //this.state = this.Standing();
     this.PlayAnim('idle');
     
-    
-    
-    
-    
+    // states/flags for things
+    this.states = {};
+    this.states.direction = 'right';
+    this.states.crouching = false;
+    this.states.upPressed = false;
+    this.states.inWater = false;
+    this.states.onLeftSlope = false;
+    this.states.onRightSlope = false;
     
     // we need some cursor keys for our controls
     this.cursors = game.input.keyboard.createCursorKeys();
     this.jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     this.menuButton = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+
+    // Menu Code
+    this.menuWindow = game.add.sprite(game.world.x + 200, game.world.y + 100, 'menu');
+    this.menuWindow.fixedToCamera = true;
+    
+    this.menuWindow.alpha = 0.8;
+    this.menuWindow.anchor.set(0.5);
+
+    // Hide it until button is clicked
+    this.menuWindow.visible = false;
+    this.menuWindow.scale.set(0.1);     
 
     // Make camera follow player
     game.camera.follow(this, Phaser.Camera.FOLLOW_PLATFORMER);    
@@ -56,12 +74,15 @@ Player.prototype.constructor = Player;
 
 Player.prototype.update = function() {
     
+    //activate function for the player's current state
+    //this.state();
+    
     // Resets player velocity every update
     this.body.velocity.x = 0;
 
     if (this.cursors.left.isDown && !this.immobile) {
-        this.body.velocity.x = -PLAYER_SPEED;
-        this.facing = 'left';
+        this.body.velocity.x = -MOVE_SPEED;
+        this.SetDirection('left');
         if (!this.falling) {
             if (this.ducking) {
                 this.PlayAnim('duckwalk');
@@ -72,8 +93,8 @@ Player.prototype.update = function() {
         }
     }
     else if (this.cursors.right.isDown && !this.immobile) {
-        this.body.velocity.x = PLAYER_SPEED;
-        this.facing = 'right';
+        this.body.velocity.x = MOVE_SPEED;
+        this.SetDirection('right');
         if (!this.falling) {
             if (this.ducking) {
                 this.PlayAnim('duckwalk');
@@ -85,6 +106,7 @@ Player.prototype.update = function() {
     }
     else {
         if (!this.falling && !this.ducking) {
+            this.state = this.Standing;
             this.PlayAnim('idle');
         }
     }
@@ -149,15 +171,6 @@ Player.prototype.update = function() {
         }, this);
     } 
 
-    // Sprite flipping
-
-    if (this.facing == 'left' && this.scale.x > 0) {
-        this.scale.x *= -1;
-    }
-    else if (this.facing == 'right' && this.scale.x < 0) {
-        this.scale.x *= -1;
-    }
-    
     if (this.menuButton.isDown) {
         if (this.menuWindow.visible) {
             this.closeWindow();
@@ -167,6 +180,14 @@ Player.prototype.update = function() {
         }
     }
 
+};
+
+Player.prototype.SetDirection = function(dir) {
+    if(this.states.direction !== dir && this.animations.paused === false) {
+        this.states.direction = dir;
+
+        dir === 'left' ? this.scale.x = -0.5 : this.scale.x = 0.5;
+    }
 };
 
 Player.prototype.PlayAnim = function(name) {
@@ -182,4 +203,162 @@ Player.prototype.setPlayerSize = function() {
     else {
     this.body.setCircle(75, 0, 0);
     }
+};
+
+Player.prototype.touchingDown = function(someone) {
+        
+    var yAxis = p2.vec2.fromValues(0, 1);
+    var result = false;
+    
+    for (var i = 0; i < this.game.physics.p2.world.narrowphase.contactEquations.length; i++) {
+        var c = this.game.physics.p2.world.narrowphase.contactEquations[i];  // cycles through all the contactEquations until it finds our "someone"
+        if (c.bodyA === someone.body.data || c.bodyB === someone.body.data)        {
+            var d = p2.vec2.dot(c.normalA, yAxis); // Normal dot Y-axis
+            if (c.bodyA === someone.body.data) d *= -1;
+            if (d > 0.5) result = true;
+        }
+    } 
+    
+    return result;
+};
+
+
+
+//////////////////STATES/////////////////
+Player.prototype.Standing = function() {
+    this.PlayAnim('idle');
+
+    if(this.body.velocity.y < 0) {
+        this.state = this.Jumping;
+    } else if(this.body.velocity.y > 10) {
+        this.state = this.Falling;
+    } else if(this.body.velocity.x !== 0) {
+        this.state = this.Running;
+    } else if(this.states.crouching) {
+        this.state = this.Crouching;
+    }
+};
+
+Player.prototype.Running = function() {
+
+    //if((frauki.states.flowLeft || frauki.states.flowRight) && !inputController.dpad.left && !inputController.dpad.right) {
+    //    this.PlayAnim('fall');
+    //} else {
+    this.PlayAnim('run');
+    //}
+
+    if(this.body.velocity.x === 0 && this.body.onFloor()) {
+        this.state = this.Standing;
+    } else if(this.body.velocity.y < 0) {
+        this.state = this.Jumping;
+    } else if(this.body.velocity.y > 150) {
+        this.state = this.Peaking;
+    }
+};
+
+//Player.prototype.Jumping = function() {
+    //if(this.animations.name !== 'roll_jump' || (this.animations.name === 'roll_jump' && this.animations.currentAnim.isFinished)) {
+//        this.PlayAnim('jump');
+//    }
+
+//    if(this.body.velocity.y >= 0) {
+//        this.state = this.Peaking;
+//    }
+//};
+
+//Player.prototype.Peaking = function() {
+//    this.PlayAnim('peak');
+
+//    this.body.gravity.y = game.physics.arcade.gravity.y * 2;
+
+//    if(this.body.velocity.y < 0) {
+//        this.state = this.Jumping;
+//    } else if(this.body.onFloor()) {
+//        this.state = this.Landing;
+//    } else if(this.animations.currentAnim.isFinished) {
+//        this.state = this.Falling;
+//    }
+//};
+
+Player.prototype.Falling = function() {
+    this.PlayAnim('fall');
+
+    //if(!this.states.inUpdraft) {
+    this.body.gravity.y = game.physics.arcade.gravity.y * 2;
+    //}
+
+    //if they jump into water, make sure they slow the hell down
+    if(this.states.inWater && this.body.velocity.y > 300) {
+        this.body.velocity.y = 300;
+    }
+
+    if(this.body.onFloor()) {
+        
+        if(this.body.velocity.x === 0) {
+            if(this.states.crouching)
+                this.state = this.Crouching;
+            else
+                this.state = this.Landing;
+        }
+        else {
+            this.state = this.Running;
+        }
+
+        //if(!frauki.states.inWater) effectsController.JumpDust(frauki.body.center);
+
+    } else if(this.body.velocity.y < 0) {
+        this.state = this.Jumping;
+    }
+};
+
+Player.prototype.Landing = function() {
+    this.PlayAnim('land');
+
+    if(this.body.velocity.y < 0) {
+        this.state = this.Jumping;
+    }
+    
+    if(this.body.velocity.x !== 0) {
+        this.state = this.Running;
+    }
+
+    if(this.animations.currentAnim.isFinished) {
+        if(this.body.velocity.x === 0) {
+            this.state = this.Standing;
+        } else {
+            this.state = this.Running;
+        }
+    }
+};
+
+Player.prototype.Crouching = function() {
+    this.PlayAnim('crouch');
+
+    if(!this.states.crouching || this.body.velocity.x !== 0 || this.body.velocity.y !== 0) {
+        this.state = this.Standing;
+    }
+};
+
+Player.prototype.openWindow = function() {
+    
+    if (this.tween !== null && this.tween.isRunning) {
+        return;
+    }
+        
+    //  Create a tween that will pop-open the window, but only if it's not already tweening or open
+    this.tween = this.game.add.tween(this.menuWindow.scale).to( { x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out, true);
+    this.menuWindow.visible = true;
+    
+};
+    
+Player.prototype.closeWindow = function() {
+    
+    if (this.tween && this.tween.isRunning) {
+        return;
+    }
+    
+    //  Create a tween that will close the window, but only if it's not already tweening or closed
+    this.tween = this.game.add.tween(this.menuWindow.scale).to( { x: 0.1, y: 0.1 }, 500, Phaser.Easing.Elastic.In, true);
+    this.menuWindow.visible = false;
+    
 };

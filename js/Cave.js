@@ -93,15 +93,15 @@ BasicGame.Cave.prototype = {
         this.exit = this.add.sprite(32, 256, 'caveexit');
     
         // Menu Code
-        this.menuWindow = this.add.sprite(this.world.x + 200, this.world.y + 100, 'menu');
-        this.menuWindow.fixedToCamera = true;
+        //this.menuWindow = this.add.sprite(this.world.x + 200, this.world.y + 100, 'menu');
+        //this.menuWindow.fixedToCamera = true;
         
-        this.menuWindow.alpha = 0.8;
-        this.menuWindow.anchor.set(0.5);
+        //this.menuWindow.alpha = 0.8;
+        //this.menuWindow.anchor.set(0.5);
     
         // Hide it until button is clicked
-        this.menuWindow.visible = false;
-        this.menuWindow.scale.set(0.1); 
+        //this.menuWindow.visible = false;
+        //this.menuWindow.scale.set(0.1); 
     
         //  Check for the player hitting another object
         this.player.body.onBeginContact.add(this.blockHit, this);
