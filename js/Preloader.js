@@ -27,12 +27,15 @@ BasicGame.Preloader.prototype = {
 		//this.load.atlas('playButton', 'images/play_button.png', 'images/play_button.json');
 		this.load.audio('titleMusic', ['audio/main_menu.mp3']);
 		//this.load.bitmapFont('caslon', 'fonts/caslon.png', 'fonts/caslon.xml');
+		    // Audio??!
+    	this.load.audio('squirm', ['audio/squirm.ogg']);
+
 
 
 		// My Assets
 		
         // Load the json tilemaps created with tiled (cachekey, filename, type of tilemap parser)
-        this.load.tilemap('testmap', 'assets/test-tilemap-polygon.json', null, Phaser.Tilemap.TILED_JSON);
+        this.load.tilemap('cave', 'assets/cave.json', null, Phaser.Tilemap.TILED_JSON);
         this.load.tilemap('forest', 'assets/forest.json', null, Phaser.Tilemap.TILED_JSON);  
 
         // Load the tileset images used in tiled to create the map  (cachekey, filename)
