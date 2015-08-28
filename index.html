@@ -8,7 +8,7 @@
     
     <div id="gameContainer"></div>
     
-    <script src="js/phaser.min.js"></script>
+    <script src="js/phaser.js"></script>
     <script src="js/Boot.js"></script>
     <script src="js/Preloader.js"></script>
     <script src="js/MainMenu.js"></script>
@@ -24,11 +24,11 @@
     	var game = new Phaser.Game(800, 600, Phaser.AUTO, 'gameContainer');
     
     	//	Add the States your game has.
-    	game.state.add('Boot', BasicGame.Boot);
-    	game.state.add('Preloader', BasicGame.Preloader);
-    	game.state.add('MainMenu', BasicGame.MainMenu);
-    	game.state.add('Cave', Cave);
-    	game.state.add('Forest', BasicGame.Forest);
+    	game.state.add('Boot', TeaTime.Boot);
+    	game.state.add('Preloader', TeaTime.Preloader);
+    	game.state.add('MainMenu', TeaTime.MainMenu);
+    	game.state.add('Cave', TeaTime.Cave);
+    	game.state.add('Forest', TeaTime.Forest);
     
     	//	Now start the Boot state.
     	game.state.start('Boot');

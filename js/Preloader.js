@@ -1,5 +1,4 @@
-
-BasicGame.Preloader = function (game) {
+TeaTime.Preloader = function (game) {
 
 	this.background = null;
 	this.preloadBar = null;
@@ -8,7 +7,7 @@ BasicGame.Preloader = function (game) {
 
 };
 
-BasicGame.Preloader.prototype = {
+TeaTime.Preloader.prototype = {
 
 	preload: function () {
 
@@ -59,7 +58,7 @@ BasicGame.Preloader.prototype = {
 	    //  Finally is the path to the JSON file that goes with the atlas.
 	    //  Note that the JSON file should be saved with UTF-8 encoding or some browsers (such as Firefox) won't load it.
 	
-	    this.load.atlas('slimegirl', 'assets/sprites/slimegirl_animations.png', 'assets/sprites/slimegirl_animations.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);        
+	    this.load.atlas('slimegirl', 'assets/sprites/sganimations.png', 'assets/sprites/sganimations.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);        
 
 	},
 
