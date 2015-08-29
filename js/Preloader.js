@@ -12,26 +12,20 @@ TeaTime.Preloader.prototype = {
 	preload: function () {
 
 		//	These are the assets we loaded in Boot.js
-		//	A nice sparkly background and a loading progress bar
-		this.background = this.add.sprite(0, 0, 'preloaderBackground');
-		this.preloadBar = this.add.sprite(300, 400, 'preloaderBar');
+		this.background = this.add.sprite(0, 0, 'loadingScreen');
+		this.background.animations.add('loadingAnimation', ['loadingscreen001', 'loadingscreen002', 'loadingscreen003', 'loadingscreen004', 
+														    'loadingscreen005', 'loadingscreen006', 'loadingscreen007', 'loadingscreen008',
+							                                'loadingscreen009', 'loadingscreen010', 'loadingscreen011', 'loadingscreen012', 
+							                                'loadingscreen013', 'loadingscreen014', 'loadingscreen015', 'loadingscreen016'], 10, true);
+		this.background.animations.play('loadingAnimation');
 
-		//	This sets the preloadBar sprite as a loader sprite.
-		//	What that does is automatically crop the sprite from 0 to full-width
-		//	as the files below are loaded in.
-		this.load.setPreloadSprite(this.preloadBar);
 
-		//	Here we load the rest of the assets our game needs.
-		//this.load.image('titlepage', 'images/title.jpg');
-		//this.load.atlas('playButton', 'images/play_button.png', 'images/play_button.json');
-		this.load.audio('titleMusic', ['audio/main_menu.mp3']);
 		//this.load.bitmapFont('caslon', 'fonts/caslon.png', 'fonts/caslon.xml');
-		    // Audio??!
+
+
+		// Load sfx
     	this.load.audio('squirm', ['audio/squirm.ogg']);
 
-
-
-		// My Assets
 		
         // Load the json tilemaps created with tiled (cachekey, filename, type of tilemap parser)
         this.load.tilemap('cave', 'assets/cave.json', null, Phaser.Tilemap.TILED_JSON);
@@ -63,10 +57,9 @@ TeaTime.Preloader.prototype = {
 	},
 
 	create: function () {
-
-		//	Once the load has finished we disable the crop because we're going to sit in the update loop for a short while as the music decodes
-		this.preloadBar.cropEnabled = false;
-
+	    this.textStyle = { font: "48px bubblegumregular", fill: "#05F08A", wordWrap: true, wordWrapWidth: 800, align: "center" };
+	    this.text = this.game.add.text(0, 0, "Tea Time", this.textStyle);
+	    this.text.setText("Tea Time");
 	},
 
 	update: function () {
@@ -80,7 +73,7 @@ TeaTime.Preloader.prototype = {
 		//	If you don't have any music in your game then put the game.state.start line into the create function and delete
 		//	the update function completely.
 		
-		if (this.cache.isSoundDecoded('titleMusic') && this.ready == false)
+		if (this.ready == false)
 		{
 			this.ready = true;
 			//this.state.start('MainMenu');

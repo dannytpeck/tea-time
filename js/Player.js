@@ -10,6 +10,8 @@ Player = function (game, x, y, name) {
     this.body.collideWorldBounds = true;
     this.body.maxVelocity.y = 500;
     this.body.drag.x = 2000;
+    this.body.setSize(250, 350, 0, 15);
+    //this.body.setSize(355, 125, 0, 70);
 
     this.initialX = x;
     this.initialY = y;
@@ -28,7 +30,7 @@ Player = function (game, x, y, name) {
     this.animations.add('falling', ['falling001', 'falling002', 'falling003', 'falling002'], fps, true);
     this.animations.add('land', ['fallimpact', 'duck016', 'duck017', 'duck018'], fps, false);
     this.animations.add('unduck', ['unduck001', 'unduck002', 'unduck003', 'unduck004', 'unduck005', 'unduck006', 'unduck007', 'unduck008', 'unduck009', 'unduck010', 'unduck011'], fps, false);
-    this.animations.add('inhale', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], fps, false);
+    this.animations.add('inhale', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], fps*2, false);
     this.animations.add('duck', ['duck008', 'duck009', 'duck010', 'duck011', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017', 'duck018'], fps, false);
     this.animations.add('duckwalk', ['duckwalk001', 'duckwalk002', 'duckwalk003', 'duckwalk002'], fps, true);
     this.animations.add('duckidle', ['duckidle001', 'duckidle002', 'duckidle003', 'duckidle004', 'duckidle005'], fps, true);
@@ -52,7 +54,7 @@ Player = function (game, x, y, name) {
     this.states.droppingThroughCloud = false;
     this.states.onLeftSlope = false;
     this.states.onRightSlope = false;
-    
+
     this.movement = {};
     this.movement.diveVelocity = 0;
     this.movement.jumpSlashVelocity = 0;
@@ -85,47 +87,37 @@ Player = function (game, x, y, name) {
     game.camera.follow(this, Phaser.Camera.FOLLOW_PLATFORMER);    
     sfx = game.add.audio('squirm', 1, false);
 
-    
+
+    // Text STUFF
+    this.text;
+
+    //this.textStyle = { font: "32px bubblegumregular", fill: "#05F08A", wordWrap: true, wordWrapWidth: this.menuWindow.width, align: "left" };
+    //this.text = this.game.add.text(0, 0, "", this.textStyle);
+    //this.text.setText("This is sample dialog!");
+    //this.text.anchor.set(0.5, 0.5);
+
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
 
-Player.prototype.preStateUpdate = function() {
-    this.body.maxVelocity.x = PLAYER_SPEED();
-    this.body.maxVelocity.y = 500;
+Player.prototype.updateText = function() {
 
-    this.body.gravity.y = 0;
-    this.body.drag.x = 2000;
-};
+    //this.text.setText("And this is more dialog!");
 
-Player.prototype.postStateUpdate = function() {
-
-    if(this.states.inWater) {
-        if(this.states.flowLeft || this.states.flowRight) {
-            this.body.maxVelocity.x *= 2;
-        } else {
-            this.body.maxVelocity.x *= 0.7;
-        }
-
-        this.body.gravity.y = -300;
-    }
-    //if(this.state === this.Walking && this.animations.currentAnim.name === 'run') {
-    //   events.publish('play_sound', {name: 'running'});
-    //} else {
-    //    events.publish('stop_sound', {name: 'running'});
-    //}
 };
 
 Player.prototype.update = function() {
     
-    this.preStateUpdate();
     this.state();
-    this.postStateUpdate();
 
+    this.game.input.onDown.addOnce(this.updateText, this);
+        
     // debug stuff
     // this.game.debug.text('this.states.crouching?: ' + this.states.crouching + 'this.state?: ' + this.state, 16, 24);
-    this.game.debug.bodyInfo(this, 16, 24);
+    //this.game.debug.bodyInfo(this, 16, 24);
+    //this.game.debug.text("Hi there", 16, 24);
+
 
     if (this.cursors.left.isDown && !this.immobile) {
         this.body.velocity.x = -MOVE_SPEED;
@@ -144,14 +136,16 @@ Player.prototype.update = function() {
     }
 
     // Crouching animation
-    if (!this.states.crouching && this.cursors.down.isDown) {
+    if (!this.immobile && !this.states.crouching && this.cursors.down.isDown) {
         //this.immobile = true; //stop left/right movement during animation
         this.states.crouching = true; //this must go here to prevent animation from starting over and over again forever
+        this.setPlayerSize();
     }
     
     // Player stands up when the up arrow is pressed
     if (!this.immobile && this.states.crouching && this.cursors.up.isDown) {
         this.states.crouching = false;
+        this.setPlayerSize();
     //    this.immobile = true;
     //  this.animations.play('unduck', 10, false); 
 
@@ -218,10 +212,10 @@ Player.prototype.PlayAnim = function(name) {
 
 Player.prototype.setPlayerSize = function() {
     if (this.states.crouching) {
-        //body size half
+        this.body.setSize(355, 125, 0, 70);
     }
     else {
-        //return body to full size
+        this.body.setSize(250, 350, 0, 15);
     }
 };
 
@@ -324,8 +318,6 @@ Player.prototype.Falling = function() {
             this.state = this.Walking;
         }
 
-        //if(!frauki.states.inWater) effectsController.JumpDust(frauki.body.center);
-
     } else if(this.body.velocity.y < 0) {
         this.state = this.Jumping;
     }
@@ -405,9 +397,19 @@ Player.prototype.openWindow = function() {
     }
         
     //  Create a tween that will pop-open the window, but only if it's not already tweening or open
-    this.tween = this.game.add.tween(this.menuWindow.scale).to( { x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out, true);
+    this.tween = this.game.add.tween(this.menuWindow.scale).to( { x: 1, y: 1 }, 500, Phaser.Easing.Elastic.Out, true);
     this.menuWindow.visible = true;
+    this.immobile = true;
+
+
+    this.textStyle = { font: "32px bubblegumregular", fill: "#05F08A", wordWrap: true, wordWrapWidth: 390, align: "left" };
+    this.text = this.game.add.text(0, 0, "", this.textStyle);
+    this.text.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt...");
+    this.text.anchor.set(0.5, 0.5);
     
+    this.text.x = this.menuWindow.x + 10;
+    this.text.y = this.menuWindow.y + 10;
+    this.text.visible = true;
 };
     
 Player.prototype.closeWindow = function() {
@@ -419,5 +421,7 @@ Player.prototype.closeWindow = function() {
     //  Create a tween that will close the window, but only if it's not already tweening or closed
     this.tween = this.game.add.tween(this.menuWindow.scale).to( { x: 0.1, y: 0.1 }, 500, Phaser.Easing.Elastic.In, true);
     this.menuWindow.visible = false;
+    this.text.visible = false;
+    this.immobile = false;
     
 };
