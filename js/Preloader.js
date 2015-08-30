@@ -32,7 +32,7 @@ TeaTime.Preloader.prototype = {
         this.load.tilemap('forest', 'assets/forest.json', null, Phaser.Tilemap.TILED_JSON);  
 
         // Load the tileset images used in tiled to create the map  (cachekey, filename)
-        this.load.image('test-tileset', 'assets/test-tileset.png');
+        this.load.image('cave_tileset', 'assets/cave_tileset.png');
 
         this.load.image('menu', 'assets/menu window.png');
 

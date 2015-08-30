@@ -8,7 +8,6 @@ var GRAVITY = 1400; //1400
 TeaTime.Cave = function (game) {
   
     this.hills;
-    this.bg;
     this.exit;
     
 };
@@ -20,10 +19,11 @@ TeaTime.Cave.prototype = {
         this.physics.startSystem(Phaser.Physics.ARCADE);
         this.physics.arcade.gravity.y = GRAVITY;
 
-        this.bg = this.add.tileSprite(0, 0, 3200, 2400, 'tutorialcave');
+        //this.bg = this.add.tileSprite(0, 0, 3200, 2400, 'tutorialcave');
+        this.game.stage.backgroundColor = '#27066A';
     
         this.mymap = this.add.tilemap('cave');
-        this.mymap.addTilesetImage('test-tileset');
+        this.mymap.addTilesetImage('cave_tileset');
         
         this.layermain = this.mymap.createLayer('layer1');
         this.layersecondary = this.mymap.createLayer('layer2');
@@ -31,7 +31,7 @@ TeaTime.Cave.prototype = {
         this.layermain.resizeWorld();
         
         this.mymap.setCollisionByExclusion([0],true, 'layer1');
-        this.mymap.setCollisionBetween(1,20,true,'layer2');
+        //this.mymap.setCollisionBetween(1,20,true,'layer2');
 
                 /*
                 
@@ -57,8 +57,8 @@ TeaTime.Cave.prototype = {
                 */
 
         // set up start location and add player to the map
-        var startX = 150;
-        var startY = this.world.height - 400;
+        var startX = 850;
+        var startY = this.world.height - 800;
         this.player = new Player(this.game, startX, startY, 'slimegirl');
         //this.game.add.existing(this.player);
         this.game.world.addAt(this.player, 2); // this is above the ground elements and below the buildings and trees
@@ -73,7 +73,7 @@ TeaTime.Cave.prototype = {
     },
 
     render: function() {
-        //this.game.debug.body(this.player);
+
     },
 
     loadForest: function () {

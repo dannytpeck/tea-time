@@ -117,6 +117,7 @@ Player.prototype.update = function() {
     // this.game.debug.text('this.states.crouching?: ' + this.states.crouching + 'this.state?: ' + this.state, 16, 24);
     //this.game.debug.bodyInfo(this, 16, 24);
     //this.game.debug.text("Hi there", 16, 24);
+    this.game.debug.body(this);
 
 
     if (this.cursors.left.isDown && !this.immobile) {
@@ -158,7 +159,7 @@ Player.prototype.update = function() {
     }
     
     // Player jumps if the jump button is pressed
-    if (this.jumpButton.isDown && this.body.onFloor() && this.game.time.now > this.jumpTimer)
+    if (this.jumpButton.isDown /* && this.body.onFloor() && this.game.time.now > this.jumpTimer */ )
     {
         this.body.velocity.y = JUMP_HEIGHT;
         this.jumpTimer = this.game.time.now + 750;
@@ -330,8 +331,10 @@ Player.prototype.Landing = function() {
     if(this.animations.currentAnim.isFinished) {
         if(this.body.velocity.x === 0) {
             this.state = this.Crouching;
+            this.setPlayerSize();
         } else {
             this.state = this.Crouchwalking;
+            this.setPlayerSize();
         }
     }
 };
