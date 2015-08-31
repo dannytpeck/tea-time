@@ -28,7 +28,7 @@ Player = function (game, x, y, name) {
     this.animations.add('turn', ['turn001', 'turn002', 'turn003', 'turn004', 'turn005'], fps*2, false);
     this.animations.add('beginfalling', ['fall001', 'fall002', 'fall003', 'fall004'], fps, false);
     this.animations.add('falling', ['falling001', 'falling002', 'falling003', 'falling002'], fps, true);
-    this.animations.add('land', ['fallimpact', 'duck016', 'duck017', 'duck018'], fps, false);
+    this.animations.add('land', ['fallimpact', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017', 'duck018'], fps, false);
     this.animations.add('unduck', ['unduck001', 'unduck002', 'unduck003', 'unduck004', 'unduck005', 'unduck006', 'unduck007', 'unduck008', 'unduck009', 'unduck010', 'unduck011'], fps, false);
     this.animations.add('inhale', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], fps*2, false);
     this.animations.add('duck', ['duck008', 'duck009', 'duck010', 'duck011', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017', 'duck018'], fps, false);
@@ -115,7 +115,7 @@ Player.prototype.update = function() {
         
     // debug stuff
     // this.game.debug.text('this.states.crouching?: ' + this.states.crouching + 'this.state?: ' + this.state, 16, 24);
-    //this.game.debug.bodyInfo(this, 16, 24);
+    this.game.debug.bodyInfo(this, 16, 24);
     //this.game.debug.text("Hi there", 16, 24);
     this.game.debug.body(this);
 
@@ -136,17 +136,21 @@ Player.prototype.update = function() {
         //Uh... no change
     }
 
-    // Crouching animation
+    // If player presses Down, drop into a pool of goo
     if (!this.immobile && !this.states.crouching && this.cursors.down.isDown) {
         //this.immobile = true; //stop left/right movement during animation
         this.states.crouching = true; //this must go here to prevent animation from starting over and over again forever
         this.setPlayerSize();
     }
     
-    // Player stands up when the up arrow is pressed
-    if (!this.immobile && this.states.crouching && this.cursors.up.isDown) {
-        this.states.crouching = false;
-        this.setPlayerSize();
+    // If player presses Up, stand up
+    // if (!this.immobile && this.states.crouching && this.cursors.up.isDown) {
+        
+    //     this.states.crouching = false;
+    //     this.setPlayerSize();
+        
+        
+        
     //    this.immobile = true;
     //  this.animations.play('unduck', 10, false); 
 
@@ -156,7 +160,7 @@ Player.prototype.update = function() {
     //        this.immobile = false;
     //        this.setPlayerSize(); // Make larger when player stands up
     //    }, this);
-    }
+    //}
     
     // Player jumps if the jump button is pressed
     if (this.jumpButton.isDown /* && this.body.onFloor() && this.game.time.now > this.jumpTimer */ )
@@ -213,14 +217,12 @@ Player.prototype.PlayAnim = function(name) {
 
 Player.prototype.setPlayerSize = function() {
     if (this.states.crouching) {
-        this.body.setSize(355, 125, 0, 70);
+        this.body.setSize(355, 128, 0, 70);
     }
     else {
         this.body.setSize(250, 350, 0, 15);
     }
 };
-
-
 
 //////////////////STATES/////////////////
 Player.prototype.Standing = function() {
@@ -307,18 +309,14 @@ Player.prototype.Falling = function() {
         this.body.velocity.y = 300;
     }
 
-    if(this.body.onFloor()) {
-        
-        if(this.body.velocity.x === 0) {
-            if(this.states.crouching)
-                this.state = this.Inhaling;
-            else
-                this.state = this.Landing;
-        }
-        else {
-            this.state = this.Walking;
-        }
+    if(this.states.direction == 'right' && this.body.velocity.x < 0) {
+        this.SetDirection('left');
+    } else if(this.states.direction == 'left' && this.body.velocity.x > 0) {
+        this.SetDirection('right');
+    }
 
+    if(this.body.onFloor()) {
+        this.state = this.Landing;
     } else if(this.body.velocity.y < 0) {
         this.state = this.Jumping;
     }
