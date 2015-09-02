@@ -23,15 +23,15 @@ Player = function (game, x, y, name) {
     this.immobile = false;
     var fps = 8;
 
-    this.animations.add('idle', ['idle001', 'idle002', 'idle003', 'idle002', 'idle001', 'idle004', 'idle005', 'idle006'], fps, true);
-    this.animations.add('walk', ['walk001', 'walk002', 'walk003', 'walk002', 'walk001', 'walk004', 'walk005', 'walk004'], fps, true);
-    this.animations.add('turn', ['turn001', 'turn002', 'turn003', 'turn004', 'turn005'], fps*2, false);
+    this.animations.add('idle',     ['idle001', 'idle002', 'idle003', 'idle002', 'idle001', 'idle004', 'idle005', 'idle006'], fps, true);
+    this.animations.add('walk',     ['walk001', 'walk002', 'walk003', 'walk002', 'walk001', 'walk004', 'walk005', 'walk004'], fps, true);
+    this.animations.add('turn',     ['turn001', 'turn002', 'turn003', 'turn004', 'turn005'], fps*2, false);
     this.animations.add('beginfalling', ['fall001', 'fall002', 'fall003', 'fall004'], fps, false);
-    this.animations.add('falling', ['falling001', 'falling002', 'falling003', 'falling002'], fps, true);
-    this.animations.add('land', ['fallimpact', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017', 'duck018'], fps, false);
-    this.animations.add('unduck', ['unduck001', 'unduck002', 'unduck003', 'unduck004', 'unduck005', 'unduck006', 'unduck007', 'unduck008', 'unduck009', 'unduck010', 'unduck011'], fps, false);
-    this.animations.add('inhale', ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], fps*2, false);
-    this.animations.add('duck', ['duck008', 'duck009', 'duck010', 'duck011', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017', 'duck018'], fps, false);
+    this.animations.add('falling',  ['falling001', 'falling002', 'falling003', 'falling002'], fps, true);
+    this.animations.add('land',     ['fallimpact', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017', 'duck018'], fps, false);
+    this.animations.add('unduck',   ['unduck001', 'unduck002', 'unduck003', 'unduck004', 'unduck005', 'unduck006', 'unduck007', 'unduck008', 'unduck009', 'unduck010', 'unduck011'], fps, false);
+    this.animations.add('inhale',   ['duck001', 'duck002', 'duck003', 'duck004', 'duck005', 'duck006', 'duck007', 'duck006', 'duck007', 'duck006', 'duck007'], fps*2, false);
+    this.animations.add('duck',     ['duck008', 'duck009', 'duck010', 'duck011', 'duck012', 'duck013', 'duck014', 'duck015', 'duck016', 'duck017', 'duck018'], fps, false);
     this.animations.add('duckwalk', ['duckwalk001', 'duckwalk002', 'duckwalk003', 'duckwalk002'], fps, true);
     this.animations.add('duckidle', ['duckidle001', 'duckidle002', 'duckidle003', 'duckidle004', 'duckidle005'], fps, true);
     this.animations.add('duckturn', ['duckturn001', 'duckturn002', 'duckturn003', 'duckturn004'], fps*2, false);
@@ -87,25 +87,13 @@ Player = function (game, x, y, name) {
     game.camera.follow(this, Phaser.Camera.FOLLOW_PLATFORMER);    
     sfx = game.add.audio('squirm', 1, false);
 
-
     // Text STUFF
     this.text;
-
-    //this.textStyle = { font: "32px bubblegumregular", fill: "#05F08A", wordWrap: true, wordWrapWidth: this.menuWindow.width, align: "left" };
-    //this.text = this.game.add.text(0, 0, "", this.textStyle);
-    //this.text.setText("This is sample dialog!");
-    //this.text.anchor.set(0.5, 0.5);
-
 };
 
 Player.prototype = Object.create(Phaser.Sprite.prototype);
 Player.prototype.constructor = Player;
 
-Player.prototype.updateText = function() {
-
-    //this.text.setText("And this is more dialog!");
-
-};
 
 Player.prototype.update = function() {
     
@@ -133,7 +121,7 @@ Player.prototype.update = function() {
         //}
     }
     else {
-        //Uh... no change
+        //Uh... do nothing
     }
 
     // If player presses Down, drop into a pool of goo

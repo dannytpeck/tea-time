@@ -35,29 +35,6 @@ TeaTime.Cave.prototype = {
         //this.mymap.setCollisionByExclusion([20], true, 'layer1');
         this.mymap.setCollisionBetween(0, 20, true, 'layer1');
 
-                /*
-                
-                var Map = function(game, key, tileWidth, tileHeight, width, height) {  
-                  Phaser.Tilemap.call(this, game, key, tileWidth, tileHeight, width, height);
-                  
-                this.addTilesetImage('gameSpriteSheet');
-                
-                
-                var ground = this.createLayer('ground'); // This is layer index '0'
-                ground.resizeWorld();
-                
-                this.createLayer('roads'); // layer index 1
-                
-                // player should go here at layer index 2
-                
-                var buildings = this.createLayer('buildings'); // layer index 3
-                this.setCollisionByExclusion([], true, buildings);
-                
-                var trees = this.createLayer('trees'); // etc.
-                };
-                
-                */
-
         // set up start location and add player to the map
         var startX = 850;
         var startY = this.world.height - 800;
