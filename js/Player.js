@@ -113,7 +113,8 @@ Player.prototype.update = function() {
     if (this.actionButton.isDown && !this.states.grabbingWall && (this.body.blocked.left || this.body.blocked.right)) {
         this.states.grabbingWall = true;
     }
-    else if (this.actionButton.isDown && this.states.grabbingWall) {
+    // Release from wall grab
+    if (this.jumpButton.isDown && this.states.grabbingWall) {
         this.states.grabbingWall = false;
     }
 
@@ -145,9 +146,9 @@ Player.prototype.update = function() {
     }
 
     // Jump is only used for debugging
-    if (this.jumpButton.isDown) {
-        this.body.velocity.y = JUMP_HEIGHT;
-    }
+    //if (this.jumpButton.isDown) {
+    //    this.body.velocity.y = JUMP_HEIGHT;
+    //}
 
     if (this.menuButton.isDown) {
         if (this.menuWindow.visible) {
