@@ -16,7 +16,7 @@ TeaTime.Cave.prototype = {
     create: function () {
     
         this.physics.startSystem(Phaser.Physics.ARCADE);
-        this.physics.arcade.gravity.y = GRAVITY;
+        // this.physics.arcade.gravity.y = GRAVITY;
         // 40 works well
         this.physics.arcade.TILE_BIAS = 40;
 
@@ -56,7 +56,7 @@ TeaTime.Cave.prototype = {
     update: function () {
         this.physics.arcade.collide(this.player, this.layermain);
 
-        //If player presses Up, stand up
+        //If player presses Up while crouching, stand up
         if (!this.player.immobile && this.player.states.crouching && this.player.cursors.up.isDown && !this.tileIsAbovePlayer()) {
             this.player.states.crouching = false;
             this.player.setPlayerSize();
