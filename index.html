@@ -1,41 +1,37 @@
 <!doctype html> 
 <html lang="en"> 
 <head> 
-	<meta charset="UTF-8" />
-    <title>Tea Time</title>
+  <meta charset="UTF-8" />
+  <title>Tea Time</title>
 </head>
 <body>
-    
-    <div id="gameContainer"></div>
-    
-    <script src="js/phaser.min.js"></script>
-    <script src="js/Boot.js"></script>
-    <script src="js/Preloader.js"></script>
-    <script src="js/MainMenu.js"></script>
-    <script src="js/Player.js"></script>
-    <script src="js/Cave.js"></script>
-    <script src="js/Forest.js"></script>
 
-    <script>
+  <div id="gameContainer"></div>
+  
+  <script src="js/phaser.min.js"></script>
+  <script src="js/Boot.js"></script>
+  <script src="js/Preloader.js"></script>
+  <script src="js/MainMenu.js"></script>
+  <script src="js/Player.js"></script>
+  <script src="js/Cave.js"></script>
+  <script src="js/Forest.js"></script>
 
+  <script>
+    /* globals Phaser, TeaTime */
     window.onload = function() {
+
+    	var game = new Phaser.Game(800, 600, Phaser.AUTO, 'gameContainer'); 
+  
+    	game.state.add('Boot', TeaTime.Boot);
+    	game.state.add('Preloader', TeaTime.Preloader);
+    	game.state.add('MainMenu', TeaTime.MainMenu);
+    	game.state.add('Cave', TeaTime.Cave);
+    	game.state.add('Forest', TeaTime.Forest);
     
-    	//	Create your Phaser game and inject it into the gameContainer div.
-    	var game = new Phaser.Game(800, 600, Phaser.AUTO, 'gameContainer');
-    
-    	//	Add the States your game has.
-    	game.state.add('Boot', BasicGame.Boot);
-    	game.state.add('Preloader', BasicGame.Preloader);
-    	game.state.add('MainMenu', BasicGame.MainMenu);
-    	game.state.add('Cave', BasicGame.Cave);
-    	game.state.add('Forest', BasicGame.Forest);
-    
-    	//	Now start the Boot state.
     	game.state.start('Boot');
     
-    };        
-        
-    </script>
+    };
+  </script>
 
 </body>
 </html>
