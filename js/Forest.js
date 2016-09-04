@@ -1,4 +1,5 @@
-TeaTime.Forest = function (game) {
+
+BasicGame.Forest = function (game) {
 
     this.isDucking = false;
     
@@ -7,7 +8,7 @@ TeaTime.Forest = function (game) {
 
 };
 
-TeaTime.Forest.prototype = {
+BasicGame.Forest.prototype = {
 
     create: function () {
 
