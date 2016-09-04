@@ -1,11 +1,12 @@
-TeaTime.MainMenu = function (game) {
+
+BasicGame.MainMenu = function (game) {
 
 	this.music = null;
 	this.playButton = null;
 
 };
 
-TeaTime.MainMenu.prototype = {
+BasicGame.MainMenu.prototype = {
 
 	create: function () {
 
