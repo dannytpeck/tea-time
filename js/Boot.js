@@ -1,10 +1,10 @@
-var BasicGame = {};
+var TeaTime = {};
 
-BasicGame.Boot = function (game) {
+TeaTime.Boot = function (game) {
 
 };
 
-BasicGame.Boot.prototype = {
+TeaTime.Boot.prototype = {
 
     init: function () {
 
@@ -33,9 +33,8 @@ BasicGame.Boot.prototype = {
 
     preload: function () {
 
-        //  Here we load the assets required for our preloader (in this case a background and a loading bar)
-        this.load.image('preloaderBackground', 'images/preloader_background.png');
-        this.load.image('preloaderBar', 'images/preloadr_bar.png');
+        //  Load assets used in Preloader
+	    this.load.atlas('loadingScreen', 'assets/sprites/loadingscreen.png', 'assets/sprites/loadingscreen.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);        
 
     },
 
